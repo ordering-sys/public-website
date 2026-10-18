@@ -12,42 +12,55 @@ export async function submitOrder(data: {
   const supabase = await createClient()
 
   try {
-    // Insert order
+    /* ── Insert order ── */
     const { data: order, error } = await supabase
       .from('orders')
       .insert({
         table_id: data.tableId,
-        items: data.items,
-        total: data.total,
-        status: 'pending'
+        items:    data.items,
+        total:    data.total,
+        status:   'pending',
       })
       .select()
       .single()
 
     if (error) throw error
 
-    // Send Telegram notification (optional)
-    const itemList = data.items
-      .map((item) => `  • ${item.name_km} x${item.quantity}`)
-      .join('\n')
+    /* ── Build Telegram message ── */
+    const hasNotes = data.items.some(i => i.notes && i.notes.trim() !== '')
 
-    const kitchenUrl = process.env.KITCHEN_APP_URL
+    // Each item line: bullet + name (km) + English + qty + optional note
+    const itemLines = data.items.map(item => {
+      const note = item.notes?.trim()
+      const noteLine = note ? `\n     📝 <i>${note}</i>` : ''
+      return `  • ${item.name_km} <i>(${item.name_en})</i> ×${item.quantity} — $${(item.price * item.quantity).toFixed(2)}${noteLine}`
+    }).join('\n')
+
+    // Optional KDS deep-links
+    const kitchenUrl  = process.env.KITCHEN_APP_URL
     const adminKdsUrl = process.env.ADMIN_KDS_URL
     const links = [
-      kitchenUrl ? `👨‍🍳 Kitchen KDS: ${kitchenUrl}` : null,
-      adminKdsUrl ? `🖥 Admin KDS: ${adminKdsUrl}` : null,
-    ]
-      .filter(Boolean)
-      .join('\n')
+      kitchenUrl  ? `👨‍🍳 <a href="${kitchenUrl}">Kitchen KDS</a>`  : null,
+      adminKdsUrl ? `🖥 <a href="${adminKdsUrl}">Admin KDS</a>`     : null,
+    ].filter(Boolean).join('   ')
 
-    await sendTelegram(
-      `🔔 <b>ការកុម្ម៉ង់ថ្មី / New order</b>\n\n` +
-        `📋 Order #${order.id.slice(0, 8)}\n` +
-        `🪑 តុ / Table: ${data.tableId}\n\n` +
-        `<b>បញ្ជី / Items:</b>\n${itemList}\n\n` +
-        `💵 សរុប / Total: $${data.total.toFixed(2)}` +
-        (links ? `\n\n${links}` : '')
-    )
+    const specialNote = hasNotes
+      ? '\n⚠️ <b>This order has special requests — check notes above.</b>'
+      : ''
+
+    const message =
+      `🔔 <b>ការកុម្ម៉ង់ថ្មី / New Order</b>\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `📋 Order <code>#${order.id.slice(0, 8).toUpperCase()}</code>\n` +
+      `🪑 Table: <b>${data.tableId}</b>\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `<b>Items:</b>\n${itemLines}\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `💵 Total: <b>$${data.total.toFixed(2)}</b>` +
+      specialNote +
+      (links ? `\n\n${links}` : '')
+
+    await sendTelegram(message)
 
     return { success: true, orderId: order.id }
   } catch (error) {
