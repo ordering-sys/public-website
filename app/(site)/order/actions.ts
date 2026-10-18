@@ -25,14 +25,14 @@ export async function submitOrder(data: {
   const supabase = await createClient()
 
   try {
-    // Insert order
+    /* ── Insert order ── */
     const { data: order, error } = await supabase
       .from('orders')
       .insert({
         table_id: data.tableId,
-        items: data.items,
-        total: data.total,
-        status: 'pending'
+        items:    data.items,
+        total:    data.total,
+        status:   'pending',
       })
       .select()
       .single()
@@ -53,7 +53,8 @@ export async function submitOrder(data: {
       })
       .join('\n')
 
-    const kitchenUrl = process.env.KITCHEN_APP_URL
+    // Optional KDS deep-links
+    const kitchenUrl  = process.env.KITCHEN_APP_URL
     const adminKdsUrl = process.env.ADMIN_KDS_URL
     const links = [
       kitchenUrl ? `👨‍🍳 Kitchen: ${escapeTelegramHtml(kitchenUrl)}` : null,
