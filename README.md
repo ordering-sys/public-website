@@ -26,6 +26,31 @@ A modern, mobile-first restaurant ordering system where customers scan QR codes 
 
 ## 🚀 Quick Start
 
+## Docker environment
+
+Build from the `public-website` directory. Next.js compiles `NEXT_PUBLIC_*` variables into browser code, so provide them when building the image:
+
+```bash
+docker build -t cafe-public \
+  --build-arg NEXT_PUBLIC_SITE_URL=https://orders.example.com \
+  --build-arg NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co \
+  --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key \
+  .
+```
+
+Run with runtime settings and mounted secret files. Create `.env.runtime` locally with public Supabase values, the site URL, chat IDs, and any app links. Keep the secret values in files outside this repository:
+
+```bash
+docker run --rm -p 3000:3000 --env-file .env.runtime \
+  --mount type=bind,src=/secure/telegram_bot_token,dst=/run/secrets/telegram_bot_token,readonly \
+  --mount type=bind,src=/secure/supabase_service_role_key,dst=/run/secrets/supabase_service_role_key,readonly \
+  -e TELEGRAM_BOT_TOKEN_FILE=/run/secrets/telegram_bot_token \
+  -e SUPABASE_SERVICE_ROLE_KEY_FILE=/run/secrets/supabase_service_role_key \
+  cafe-public
+```
+
+The service role key is optional for current public-site routes; mount it only if server code that uses it is enabled. A deployment platform can provide Docker secrets or an equivalent secret mount at those paths. `TELEGRAM_BOT_TOKEN` and `SUPABASE_SERVICE_ROLE_KEY` environment variables remain supported outside Docker. Rebuild the image when a public value changes. The `.dockerignore` excludes `.env` files from the image build context.
+
 ### Prerequisites
 - Node.js 20+
 - Supabase account (free tier)

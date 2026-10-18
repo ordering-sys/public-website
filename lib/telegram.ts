@@ -1,3 +1,5 @@
+import { serverSecret } from '@/lib/server-secret'
+
 /** All chats that should receive alerts (deduplicated). */
 export function getTelegramAlertChatIds(): string[] {
   const ids = [
@@ -35,7 +37,7 @@ async function sendTelegramToChat(
 
 /** Send the same message to admin, kitchen, and/or default staff chats. */
 export async function sendTelegram(message: string) {
-  const botToken = process.env.TELEGRAM_BOT_TOKEN
+  const botToken = serverSecret('TELEGRAM_BOT_TOKEN')
   const chatIds = getTelegramAlertChatIds()
 
   if (!botToken || chatIds.length === 0) {
