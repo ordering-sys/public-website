@@ -1,5 +1,7 @@
 'use client'
 
+import { MenuImage } from '@/components/site/MenuImage'
+
 import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ShoppingCart, Plus, Minus, Trash2, X, FileText, ChevronRight } from 'lucide-react'
@@ -66,14 +68,9 @@ function ProductDetailModal({ item, lang, cartQty, onClose, onAdd }: DetailModal
           className="relative w-full flex-shrink-0 overflow-hidden"
           style={{ height: 240, background: 'var(--bg-elevated)' }}
         >
-          {item.image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={item.image_url}
+          <MenuImage src={item.image_url}
               alt={primaryName}
-              className="w-full h-full object-cover"
-            />
-          ) : (
+              className="w-full h-full object-cover">
             <div className="w-full h-full flex flex-col items-center justify-center gap-3 opacity-25">
               <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="1.2" strokeLinecap="round" aria-hidden="true">
                 <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
@@ -84,7 +81,7 @@ function ProductDetailModal({ item, lang, cartQty, onClose, onAdd }: DetailModal
               </svg>
               <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{item.category}</span>
             </div>
-          )}
+          </MenuImage>
 
           {/* Gradient overlay at bottom of image */}
           <div
@@ -270,6 +267,7 @@ export default function OrderContent() {
   const [menuItems,         setMenuItems]         = useState<MenuItem[]>([])
   const [cart,              setCart]              = useState<CartItem[]>([])
   const [loading,           setLoading]           = useState(true)
+  const [menuError, setMenuError] = useState(false)
   const [submitting,        setSubmitting]        = useState(false)
   const [showCart,          setShowCart]          = useState(false)
   const [selectedCategory,  setSelectedCategory]  = useState<string>('all')
@@ -279,6 +277,8 @@ export default function OrderContent() {
 
   useEffect(() => {
     loadMenu()
+    window.addEventListener('focus', loadMenu)
+    return () => window.removeEventListener('focus', loadMenu)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -286,13 +286,15 @@ export default function OrderContent() {
     try {
       const { data, error } = await supabase
         .from('menu_items')
-        .select('*')
+        .select('id, name_km, name_en, description, price, category, image_url, available')
         .eq('available', true)
         .order('category', { ascending: true })
       if (error) throw error
       setMenuItems(data || [])
+      setMenuError(false)
     } catch (err) {
       console.error('Failed to load menu:', err)
+      setMenuError(true)
     } finally {
       setLoading(false)
     }
@@ -411,6 +413,7 @@ export default function OrderContent() {
           })}
         </div>
 
+        {menuError && <p role="alert" className="mb-4">{lang === 'km' ? 'មិនអាចទាញយកមុខម្ហូបបានទេ។ សូមព្យាយាមម្តងទៀត។' : 'Could not load the menu.'} <button onClick={() => void loadMenu()} className="underline">{lang === 'km' ? 'ព្យាយាមម្តងទៀត' : 'Try again'}</button></p>}
         {/* Menu grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
           {filteredItems.map(item => {
@@ -433,22 +436,17 @@ export default function OrderContent() {
                   aria-label={`${lang === 'km' ? item.name_km : item.name_en} — ${t('tapForDetail', lang)}`}
                   onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setDetailItem(item)}
                 >
-                  {item.image_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={item.image_url}
+                  <MenuImage src={item.image_url}
                       alt={lang === 'km' ? item.name_km : item.name_en}
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                      loading="lazy"
-                    />
-                  ) : (
+                      loading="lazy">
                     <div className="w-full h-full dish-ph flex items-center justify-center" style={{ color: 'var(--primary)', opacity: 0.5 }}>
                       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true">
                         <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
                         <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
                       </svg>
                     </div>
-                  )}
+                  </MenuImage>
 
                   {/* Category tag */}
                   <span

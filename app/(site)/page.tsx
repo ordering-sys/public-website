@@ -1,5 +1,7 @@
 'use client'
 
+import { MenuImage } from '@/components/site/MenuImage'
+
 import Link from 'next/link'
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -8,7 +10,7 @@ import { t } from '@/lib/i18n'
 import { tableQs } from '@/lib/table-qs'
 import { createClient } from '@/lib/supabase/client'
 import type { MenuItem } from '@/lib/types'
-import { ArrowRight, Compass, Sparkles, MapPin, Coffee, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, Compass, Sparkles } from 'lucide-react'
 import { Hero3DShowcase } from '@/components/site/Hero3DShowcase'
 import { CoffeeBeanRain } from '@/components/site/CoffeeBeanRain'
 import { IconBean, IconCup, IconLeaf, IconPlus, IconStar } from '@/components/site/icons'
@@ -21,16 +23,32 @@ function LandingContent() {
   const token = searchParams.get('token')
   const qs = tableQs(table, token)
   const [featured, setFeatured] = useState<MenuItem[]>([])
+  const [menuError, setMenuError] = useState(false)
+  const [menuLoading, setMenuLoading] = useState(true)
 
   useEffect(() => {
     const supabase = createClient()
-    supabase
+    let active = true
+    async function loadFeatured() {
+      try {
+        const { data, error } = await supabase
       .from('menu_items')
-      .select('*')
+      .select('id, name_km, name_en, description, price, category, image_url, available')
       .eq('available', true)
-      .order('created_at', { ascending: false })
+      .order('name_en')
       .limit(4)
-      .then(({ data }) => setFeatured(data ?? []))
+        if (error) throw error
+        if (active) { setFeatured(data ?? []); setMenuError(false) }
+      } catch (error) {
+        console.error('Failed to load featured menu:', error)
+        if (active) setMenuError(true)
+      } finally {
+        if (active) setMenuLoading(false)
+      }
+    }
+    void loadFeatured()
+    window.addEventListener('focus', loadFeatured)
+    return () => { active = false; window.removeEventListener('focus', loadFeatured) }
   }, [])
 
   const features = [
@@ -46,13 +64,7 @@ function LandingContent() {
     { n: '03', title: t('how3Title', lang), desc: t('how3Desc', lang) },
   ]
 
-  const placeholderItems: MenuItem[] = [
-    { id: '1', name_km: 'កាហ្វេដោះគោ', name_en: 'Caffè Latte', price: 4.50, category: 'Coffee', available: true, image_url: '' },
-    { id: '2', name_km: 'អាមេរិកាណូ', name_en: 'Americano', price: 3.50, category: 'Coffee', available: true, image_url: '' },
-    { id: '3', name_km: 'ម៉ាគីអាតូ', name_en: 'Caramel Macchiato', price: 5.50, category: 'Coffee', available: true, image_url: '' },
-    { id: '4', name_km: 'ចូករ័ត', name_en: 'Chocolate Croissant', price: 3.75, category: 'Food', available: true, image_url: '' },
-  ]
-  const displayItems = featured.length > 0 ? featured : placeholderItems
+  const displayItems = featured
   const orderHref = `/order${qs}`
 
   return (
@@ -220,6 +232,9 @@ function LandingContent() {
 
       <section style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--bg-border)', borderBottom: '1px solid var(--bg-border)' }}>
         <div className="mx-auto max-w-6xl px-6 py-12">
+          {menuError && <p role="alert">{lang === 'km' ? 'មិនអាចទាញយកមុខម្ហូបបានទេ។ សូមព្យាយាមម្តងទៀត។' : 'Could not load the menu. Please refresh to try again.'}</p>}
+          {menuLoading && <p role="status">{lang === 'km' ? 'កំពុងទាញយកមុខម្ហូប…' : 'Loading menu…'}</p>}
+          {!menuLoading && !menuError && !featured.length && <p>{lang === 'km' ? 'មិនទាន់មានមុខម្ហូបទេ។' : 'No menu items available yet.'}</p>}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {features.map((f, i) => (
               <div key={i} className="card card-hover p-5 flex flex-col items-center text-center gap-3">
@@ -275,15 +290,12 @@ function LandingContent() {
             {displayItems.map((item, i) => (
               <div key={item.id} className={`card card-hover anim-${i}`} style={{ overflow: 'hidden' }}>
                 <div className="w-full h-44 flex items-center justify-center relative overflow-hidden dish-ph">
-                  {item.image_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.image_url} alt={item.name_en} className="w-full h-full object-cover" loading="lazy" />
-                  ) : (
+                  <MenuImage src={item.image_url} alt={item.name_en} className="w-full h-full object-cover" loading="lazy">
                     <div className="flex flex-col items-center gap-2" style={{ color: 'var(--primary)', opacity: 0.55 }}>
                       <IconCup />
                       <span className="text-[10px] tracking-widest uppercase">{item.category}</span>
                     </div>
-                  )}
+                  </MenuImage>
                   <span
                     className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full"
                     style={{ background: 'rgba(0,0,0,0.55)', color: 'var(--primary-light)', backdropFilter: 'blur(6px)' }}

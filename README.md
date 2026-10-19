@@ -254,3 +254,11 @@ MIT License - feel free to use for your restaurant!
 **Current Version:** Phase 1.5 (Customer + Admin QR)  
 **Status:** Production-ready for QR generation  
 **Next:** Menu Management or Kitchen Display System
+
+## Telegram order images
+
+New order alerts send the existing order summary followed by a photo for each ordered item with a saved `menu_items.image_url`. Photo captions include the order, table, quantity, item names, and notes. The same alerts go to the configured default, admin, and kitchen chats; duplicate chat IDs are sent only once.
+
+R2 image URLs must be publicly accessible so Telegram can fetch them. Items without images remain in the text summary. A failed image lookup or photo delivery does not fail a saved order or remove its text alert. Telegram can reject inaccessible images or unsupported photo formats; check server logs if a photo is missing.
+
+Run the mocked notification checks with `node --test scripts/test-telegram.mjs`. These checks do not send real Telegram messages.

@@ -1,5 +1,7 @@
 'use client'
 
+import { MenuImage } from '@/components/site/MenuImage'
+
 import { ChevronRight, FileText, Minus, Plus } from 'lucide-react'
 import { t } from '@/lib/i18n'
 import type { Lang } from '@/lib/i18n'
@@ -29,22 +31,17 @@ export function MenuCard({ item, lang, cartItem, onOpenDetail, onAdd, onUpdateQt
         aria-label={`${primaryName} — ${t('tapForDetail', lang)}`}
         onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && onOpenDetail(item)}
       >
-        {item.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={item.image_url}
+        <MenuImage src={item.image_url}
             alt={primaryName}
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-            loading="lazy"
-          />
-        ) : (
+            loading="lazy">
           <div className="w-full h-full flex items-center justify-center opacity-20">
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true">
               <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
               <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
             </svg>
           </div>
-        )}
+        </MenuImage>
 
         <span className="tag-fresh absolute top-2 left-2" style={{ backdropFilter: 'blur(6px)' }}>
           {item.category}

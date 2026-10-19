@@ -1,5 +1,7 @@
 'use client'
 
+import { MenuImage } from '@/components/site/MenuImage'
+
 import { useEffect, useRef, useState } from 'react'
 import { FileText, Minus, Plus, ShoppingCart, X } from 'lucide-react'
 import { t } from '@/lib/i18n'
@@ -56,10 +58,7 @@ export function ProductDetailModal({ item, lang, cartQty, onClose, onAdd }: Prod
           className="relative w-full flex-shrink-0 overflow-hidden"
           style={{ height: 240, background: 'var(--bg-elevated)' }}
         >
-          {item.image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={item.image_url} alt={primaryName} className="w-full h-full object-cover" />
-          ) : (
+          <MenuImage src={item.image_url} alt={primaryName} className="w-full h-full object-cover">
             <div className="w-full h-full flex flex-col items-center justify-center gap-3 opacity-25">
               <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="1.2" strokeLinecap="round" aria-hidden="true">
                 <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
@@ -70,7 +69,7 @@ export function ProductDetailModal({ item, lang, cartQty, onClose, onAdd }: Prod
               </svg>
               <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{item.category}</span>
             </div>
-          )}
+          </MenuImage>
 
           <div
             className="absolute bottom-0 left-0 right-0 h-20 pointer-events-none"
