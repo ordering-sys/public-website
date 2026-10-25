@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import OrderContent from './order-content'
+import OrderContent from '../../../components/site/order/OrderContent'
 
 export default function OrderPage() {
   return (

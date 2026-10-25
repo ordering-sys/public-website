@@ -95,7 +95,7 @@ const strings = {
   items:          { en: 'items',                km: 'មុខ' },
   item:           { en: 'item',                 km: 'មុខ' },
   startOrder:     { en: 'Start Order',          km: 'ចាប់ផ្តើមកុម្ម៉ង់' },
-  mustScanInShop: { en: 'Must Scan in Shop — scan the QR code at your table to order.', km: 'សូមស្កេន QR កូដនៅតុក្នុងហាង ដើម្បីកុម្ម៉ង់។' },
+  mustScanInShop: { en: 'Must Scan in Shop', km: 'សូមស្កេន QR កូដនៅតុក្នុងហាង' },
   scanPrompt:     { en: 'Scan the QR code at your table to begin ordering', km: 'ស្កេន QR Code នៅតុដើម្បីចាប់ផ្តើមកុម្ម៉ង់' },
   welcomeLabel:   { en: 'Welcome',              km: 'សូមស្វាគមន៍' },
   landingDesc:    { en: 'Order food & drinks directly from your table — fast, easy, no waiting.', km: 'កុម្ម៉ង់អាហារ និងភេសជ្ជៈដោយផ្ទាល់ — លឿន ងាយ គ្មានរង់ចាំ។' },
@@ -130,16 +130,12 @@ const strings = {
   detailDescription:  { en: 'Description',                     km: 'ការពិពណ៌នា' },
   detailNoDesc:       { en: 'No description available.',       km: 'គ្មានការពិពណ៌នា។' },
   detailSubtotal:     { en: 'Subtotal',                        km: 'សរុបរង' },
-<<<<<<< Updated upstream
   sugarLevel:         { en: 'Sugar level',                     km: 'កម្រិតជាតិស្ករ' },
   noSugar:            { en: 'No sugar',                        km: 'គ្មានស្ករ' },
   sugarPercent:       { en: '% sugar',                         km: '% ស្ករ' },
-=======
-  sugarLevel:         { en: 'Sugar level',                      km: 'កម្រិតជាតិស្ករ' },
   sugarOptionsBadge:  { en: 'Sugar options',                    km: 'ជ្រើសរើសកម្រិតស្ករ' },
   sugarNoSugar:       { en: 'No sugar (0%)',                    km: 'គ្មានស្ករ (0%)' },
   sugarSamePrice:     { en: 'Same price for every sugar level.', km: 'តម្លៃនៅដដែលសម្រាប់គ្រប់កម្រិតជាតិស្ករ។' },
->>>>>>> Stashed changes
   notesLabel:         { en: 'Special Request',                 km: 'សំណើរពិសេស' },
   notesPlaceholder:   { en: 'e.g. no ice, extra hot…',         km: 'ឧ. គ្មានទឹកកក ក្ដៅណាស់…' },
   notesHint:          { en: 'Optional — sent directly to kitchen', km: 'ជម្រើស — ផ្ញើទៅផ្ទះបាយផ្ទាល់' },

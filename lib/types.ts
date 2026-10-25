@@ -9,8 +9,6 @@ export interface MenuItem {
   sugar_levels?: number[]
   default_sugar_level?: number | null
   available: boolean
-  sugar_levels?: number[]
-  default_sugar_level?: number | null
 }
 
 export interface CartItem extends MenuItem {

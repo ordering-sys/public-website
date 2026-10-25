@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { getLocation } from '@/lib/location'
-import { verifyTableLocation } from '@/app/table-access-actions'
+import { verifyTableLocation } from '@/types/table-access-actions'
 
 export function TableLocationGate({ children }: { children: ReactNode }) {
   const params = useSearchParams()

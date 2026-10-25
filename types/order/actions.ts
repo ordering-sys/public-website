@@ -1,7 +1,6 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { isSugarSchemaUnavailable, prepareOrderItems } from '@/lib/sugar'
 import { checkTableAccess } from '@/lib/table-access'
 import type { LocationFix } from '@/lib/location'
 import { sendTelegram, type TelegramOrderPhoto } from '@/lib/telegram'
@@ -29,7 +28,6 @@ export async function submitOrder(data: {
   total?: number
 }) {
   try {
-<<<<<<< Updated upstream
     if (!data || typeof data.tableId !== 'string' || typeof data.token !== 'string' ||
         !data.tableId.trim() || !data.token.trim() || data.tableId.length > 64 || data.token.length > 256 ||
         !Array.isArray(data.items) || data.items.length === 0 || data.items.length > 30) {
@@ -91,38 +89,13 @@ export async function submitOrder(data: {
     )) {
       return { success: false, error: 'Order total changed; please review your cart' }
     }
-=======
-    await checkTableAccess(data.tableId, data.token, data.location)
-    if (!Array.isArray(data.items) || !data.items.length || data.items.length > 100) throw new Error('Invalid order items.')
-    let { data: savedMenu, error: menuLookupError } = await supabase.from('menu_items')
-      .select('id, name_en, name_km, category, price, available, image_url, sugar_levels, default_sugar_level')
-      .in('id', [...new Set(data.items.map(item => item.id))])
-    if (isSugarSchemaUnavailable(menuLookupError)) {
-      console.warn('Sugar-level columns are missing; validating order against the legacy menu schema.')
-      const legacyResult = await supabase.from('menu_items')
-        .select('id, name_en, name_km, category, price, available, image_url')
-        .in('id', [...new Set(data.items.map(item => item.id))])
-      savedMenu = legacyResult.data?.map(item => ({ ...item, sugar_levels: [], default_sugar_level: null })) ?? null
-      menuLookupError = legacyResult.error
-    }
-    if (menuLookupError || !savedMenu) throw new Error('Unable to validate menu options. Please try again.')
-    const items = prepareOrderItems(data.items, savedMenu)
-    const total = Math.round(items.reduce((sum, item) => sum + Math.round(item.price * 100) * item.quantity, 0)) / 100
-    if (!Number.isFinite(data.total) || Math.abs(total - data.total) > 0.001) throw new Error('Menu prices changed. Refresh the menu before ordering. / សូមផ្ទុកម៉ឺនុយឡើងវិញ។')
->>>>>>> Stashed changes
     /* ── Insert order ── */
     const { data: order, error } = await supabase
       .from('orders')
       .insert({
-<<<<<<< Updated upstream
         table_id: table.number,
         items:    pricedItems,
         total,
-=======
-        table_id: data.tableId,
-        items:    items,
-        total:    total,
->>>>>>> Stashed changes
         status:   'pending',
       })
       .select()
@@ -131,11 +104,7 @@ export async function submitOrder(data: {
     if (error) throw error
 
     // Send Telegram notification (optional)
-<<<<<<< Updated upstream
     const itemList = pricedItems
-=======
-    const itemList = items
->>>>>>> Stashed changes
       .map((item, index) => {
         const name = escapeTelegramHtml(item.name_en || item.name_km)
         const khmerName = item.name_en && item.name_km
@@ -144,14 +113,10 @@ export async function submitOrder(data: {
         const note = item.notes?.trim()
           ? `\n   📝 ${escapeTelegramHtml(item.notes.trim())}`
           : ''
-<<<<<<< Updated upstream
         const sugar = item.sugar_level !== undefined
           ? `\n   ☕ Sugar: ${item.sugar_level}%`
           : ''
         return `${index + 1}. <b>${item.quantity} × ${name}</b>${khmerName}${sugar}${note}`
-=======
-        return `${index + 1}. <b>${item.quantity} × ${name}</b>${khmerName}${item.sugar_level != null ? `\n   Sugar / កម្រិតជាតិស្ករ: ${item.sugar_level}%` : ''}${note}`
->>>>>>> Stashed changes
       })
       .join('\n')
 
@@ -169,17 +134,8 @@ export async function submitOrder(data: {
     // A lookup failure must not prevent an already-created order's text alert.
     const photos: TelegramOrderPhoto[] = []
     try {
-<<<<<<< Updated upstream
       for (const item of pricedItems) {
-        const url = item.image_url
-=======
-      const { data: menu, error: menuError } = await supabase.from('menu_items')
-        .select('id, image_url')
-        .in('id', [...new Set(data.items.map(item => item.id))])
-      if (menuError) throw menuError
-      for (const item of items) {
-        const url = menu?.find(entry => entry.id === item.id)?.image_url
->>>>>>> Stashed changes
+        const url = menu.find(entry => entry.id === item.id)?.image_url
         if (!url) continue
         photos.push({ url, caption:
           `Order #${order.id.slice(0, 8).toUpperCase()} · Table ${table.number}\n` +

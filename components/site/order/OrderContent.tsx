@@ -9,14 +9,10 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { ShoppingCart, Plus, Minus, Trash2, X, FileText, ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { MenuItem, CartItem } from '@/lib/types'
-import { addCartItem, cartItemKey, isSugarSchemaUnavailable } from '@/lib/sugar'
-import { submitOrder as submitOrderAction } from './actions'
+import { submitOrder as submitOrderAction } from '../../../types/order/actions'
 import { useTheme } from '@/lib/theme-context'
 import { t } from '@/lib/i18n'
 
-/* ─────────────────────────────────────────────────────────
-   PRODUCT DETAIL MODAL
-   ───────────────────────────────────────────────────────── */
 interface DetailModalProps {
   item: MenuItem
   lang: 'en' | 'km'
@@ -27,14 +23,9 @@ interface DetailModalProps {
 }
 
 function ProductDetailModal({ item, lang, cartQty, canOrder, onClose, onAdd }: DetailModalProps) {
-<<<<<<< Updated upstream
-  const sugarLevels = item.sugar_levels ?? []
-=======
   const [sugarLevel, setSugarLevel] = useState<number | undefined>(item.default_sugar_level ?? item.sugar_levels?.[0])
->>>>>>> Stashed changes
   const [qty, setQty]       = useState(1)
   const [notes, setNotes]   = useState('')
-  const [sugarLevel, setSugarLevel] = useState(item.default_sugar_level ?? item.sugar_levels?.[0])
   const [added, setAdded]   = useState(false)
   const notesRef            = useRef<HTMLTextAreaElement>(null)
 
@@ -52,6 +43,7 @@ function ProductDetailModal({ item, lang, cartQty, canOrder, onClose, onAdd }: D
     setTimeout(() => setAdded(false), 1800)
   }
 
+  const sugarLevels = item.sugar_levels ?? []
   const subtotal = (item.price * qty).toFixed(2)
   const primaryName   = lang === 'km' ? item.name_km  : item.name_en
   const secondaryName = lang === 'km' ? item.name_en  : item.name_km
@@ -239,7 +231,6 @@ function ProductDetailModal({ item, lang, cartQty, canOrder, onClose, onAdd }: D
             </div>
           </div>
 
-          {!!item.sugar_levels?.length && <fieldset className="mb-5"><legend className="mb-3 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{t('sugarLevel', lang)}</legend><div className="flex flex-wrap gap-2">{item.sugar_levels.map(level => <label key={level} className="relative cursor-pointer rounded-xl border px-3 py-3 text-sm" style={{ borderColor: sugarLevel === level ? 'var(--primary)' : 'var(--bg-border)', background: sugarLevel === level ? 'var(--primary-glow)' : 'var(--bg-elevated)', color: sugarLevel === level ? 'var(--primary)' : 'var(--text-primary)' }}><input type="radio" name="sugar-level" value={level} checked={sugarLevel === level} onChange={() => setSugarLevel(level)} className="mr-2 accent-amber-600" />{level === 0 ? t('sugarNoSugar', lang) : level + '%'}</label>)}</div><p className="mt-2 text-xs" style={{ color: 'var(--text-secondary)' }}>{t('sugarSamePrice', lang)}</p></fieldset>}
           {/* ── Special request / notes ── */}
           <div className="mb-5">
             <div className="flex items-center gap-2 mb-2">
@@ -310,7 +301,6 @@ export default function OrderContent() {
   const [showCart,          setShowCart]          = useState(false)
   const [selectedCategory,  setSelectedCategory]  = useState<string>('all')
   const [detailItem,        setDetailItem]        = useState<MenuItem | null>(null)
-  const [sugarSelections, setSugarSelections] = useState<Record<string, number>>({})
 
   const supabase = createClient()
 
@@ -329,11 +319,8 @@ export default function OrderContent() {
         .eq('available', true)
         .order('category', { ascending: true })
       if (isSugarSchemaUnavailable(error)) {
-<<<<<<< Updated upstream
-=======
         console.warn('Sugar-level columns are missing; loading the menu without sugar options. Run SUGAR-LEVEL-SETUP.sql to enable them.')
         setSugarSetupNeeded(true)
->>>>>>> Stashed changes
         const legacyResult = await supabase
           .from('menu_items')
           .select('id, name_km, name_en, description, price, category, image_url, available')
@@ -341,11 +328,8 @@ export default function OrderContent() {
           .order('category', { ascending: true })
         data = legacyResult.data?.map(item => ({ ...item, sugar_levels: [], default_sugar_level: null })) ?? null
         error = legacyResult.error
-<<<<<<< Updated upstream
-=======
       } else {
         setSugarSetupNeeded(false)
->>>>>>> Stashed changes
       }
       if (error) throw error
       setMenuItems(data || [])
@@ -359,22 +343,6 @@ export default function OrderContent() {
   }
 
   /* ── Cart helpers ── */
-<<<<<<< Updated upstream
-  const addToCartWithNotes = (item: MenuItem, qty: number, notes: string, sugarLevel = item.default_sugar_level ?? undefined) => {
-    if (!canOrder) return
-    setCart(prev => addCartItem(prev, item, qty, notes, sugarLevel))
-  }
-
-  const updateQty = (key: string, delta: number) =>
-    setCart(prev =>
-      prev
-        .map(i => cartItemKey(i) === key ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i)
-        .filter(i => i.quantity > 0)
-    )
-
-  const removeFromCart = (key: string) =>
-    setCart(prev => prev.filter(i => cartItemKey(i) !== key))
-=======
   const addToCartWithNotes = (item: MenuItem, qty: number, notes: string, sugarLevel?: number) => {
     if (!canOrder) return
     setCart(previous => addCartItem(previous, item, qty, notes, sugarLevel))
@@ -384,7 +352,6 @@ export default function OrderContent() {
     .map(item => cartItemKey(item) === key ? { ...item, quantity: Math.max(0, item.quantity + delta) } : item)
     .filter(item => item.quantity > 0))
   const removeFromCart = (key: string) => setCart(previous => previous.filter(item => cartItemKey(item) !== key))
->>>>>>> Stashed changes
 
   const cartTotal = cart.reduce((s, i) => s + i.price * i.quantity, 0)
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0)
@@ -486,25 +453,9 @@ export default function OrderContent() {
         {/* Menu grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
           {filteredItems.map(item => {
-<<<<<<< Updated upstream
-            const inCartItems = cart.filter(c => c.id === item.id)
-            const inCart = inCartItems.find(c => c.sugar_level === item.default_sugar_level && !c.notes) ?? inCartItems[0]
-            const inQty = inCartItems.reduce((sum, line) => sum + line.quantity, 0)
-=======
             const inCart  = cart.find(c => c.id === item.id)
             const inQty   = cart.filter(line => line.id === item.id).reduce((sum, line) => sum + line.quantity, 0)
-            const sugarLevels = item.sugar_levels ?? []
-            const preferredSugar = item.default_sugar_level != null && sugarLevels.includes(item.default_sugar_level)
-              ? item.default_sugar_level
-              : sugarLevels[0]
-            const selectedSugar = sugarLevels.includes(sugarSelections[item.id])
-              ? sugarSelections[item.id]
-              : preferredSugar
-            const selectedSugarItem = selectedSugar == null ? undefined : cart.find(line =>
-              line.id === item.id && line.sugar_level === selectedSugar && !line.notes?.trim()
-            )
-            const selectedSugarQty = selectedSugarItem?.quantity ?? 0
->>>>>>> Stashed changes
+
 
             return (
               <div
@@ -578,24 +529,6 @@ export default function OrderContent() {
                     {lang === 'km' ? item.name_en : item.name_km}
                   </p>
 
-                  {!!item.sugar_levels?.length && (
-                    <div className="mt-2 space-y-1" onClick={event => event.stopPropagation()}>
-                      <label className="block text-[10px] font-semibold" style={{ color: 'var(--primary)' }}>
-                        {t('sugarLevel', lang)}
-                        <select
-                          aria-label={`${t('sugarLevel', lang)} for ${item.name_en}`}
-                          value={selectedSugar ?? ''}
-                          onChange={event => setSugarSelections(previous => ({ ...previous, [item.id]: Number(event.target.value) }))}
-                          className="mt-1 w-full rounded-lg border px-2 py-1.5 text-xs font-normal"
-                          style={{ borderColor: 'var(--bg-border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
-                        >
-                          {sugarLevels.map(level => <option key={level} value={level}>{level === 0 ? t('sugarNoSugar', lang) : `${level}%`}</option>)}
-                        </select>
-                      </label>
-                      <span className="block text-[9px] leading-relaxed" style={{ color: 'var(--text-dim)' }}>{t('sugarSamePrice', lang)}</span>
-                    </div>
-                  )}
-
                   {/* Notes indicator */}
                   {inCart?.notes && (
                     <div className="flex items-center gap-1">
@@ -620,23 +553,6 @@ export default function OrderContent() {
                     <span className="text-xs font-semibold text-right max-w-[65%]" style={{ color: 'var(--text-secondary)' }}>
                       {t('mustScanInShop', lang)}
                     </span>
-                  ) : sugarLevels.length > 0 && selectedSugar != null ? (
-                    <div className="qty-stepper" role="group" aria-label={`${t('sugarLevel', lang)} ${selectedSugar}% quantity for ${item.name_en}`}>
-                      <button
-                        onClick={() => selectedSugarItem && updateQty(cartItemKey(selectedSugarItem), -1)}
-                        disabled={!selectedSugarItem}
-                        aria-label={`Remove one ${item.name_en} with ${selectedSugar}% sugar`}
-                      >
-                        <Minus className="w-3.5 h-3.5" />
-                      </button>
-                      <span aria-live="polite">{selectedSugarQty}</span>
-                      <button
-                        onClick={() => addToCartWithNotes(item, 1, '', selectedSugar)}
-                        aria-label={`${t('addToCart', lang)} ${item.name_en} with ${selectedSugar}% sugar`}
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
                   ) : inQty > 0 && !item.sugar_levels?.length ? (
                     /* Inline stepper when already in cart */
                     <div className="qty-stepper" role="group" aria-label={`Quantity of ${item.name_en}`}>
