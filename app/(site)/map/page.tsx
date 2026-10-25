@@ -133,7 +133,7 @@ function MapContent() {
       desc_en: 'Cozy indoor lounge, green garden patio, high-speed Wi-Fi, and warm hospitality.',
       desc_km: 'កន្លែងអង្គុយសម្រាកដ៏កក់ក្តៅ សួនធម្មជាតិ Wi-Fi ល្បឿនលឿន និងសេវាកម្មរួសរាយ។',
       icon: Sparkles,
-      href: `/${qs}#about`,
+      href: `/about${qs}`,
       badge_en: 'About Us',
       badge_km: 'អំពីយើង',
       color: 'var(--fresh)',

@@ -282,6 +282,8 @@ input, select, textarea { font-size: 16px; }
    CARDS
    ═══════════════════════════════════════════════════════════ */
 .card {
+  position: relative;
+  z-index: 20;
   background: var(--bg-card);
   border: 1px solid var(--bg-border);
   border-radius: 1rem;
@@ -463,6 +465,7 @@ input, select, textarea { font-size: 16px; }
 .hero-bg {
   position: absolute;
   inset: 0;
+  z-index: 0;
   background-color: #0c0a08;
   background-image:
     radial-gradient(circle at 82% 38%, rgba(240, 167, 66, 0.32) 0%, rgba(200, 120, 24, 0.14) 40%, transparent 68%),
@@ -472,12 +475,11 @@ input, select, textarea { font-size: 16px; }
 }
 
 [data-theme="light"] .hero-bg {
-  background-color: #faf7f2;
+  background-color: #fff;
   background-image:
-    radial-gradient(circle at 82% 38%, rgba(240, 167, 66, 0.22) 0%, rgba(247, 192, 106, 0.1) 40%, transparent 68%),
-    radial-gradient(circle at 18% 28%, rgba(48, 201, 160, 0.18) 0%, rgba(52, 211, 153, 0.07) 42%, transparent 68%),
-    radial-gradient(circle at 50% 88%, rgba(254, 243, 199, 0.8) 0%, transparent 75%),
-    linear-gradient(145deg, #fdfbf7 0%, #f4faf7 50%, #f7f8fa 100%);
+    radial-gradient(circle at 81% 42%, rgba(240, 167, 66, 0.11) 0%, transparent 49%),
+    radial-gradient(circle at 13% 38%, rgba(48, 201, 160, 0.08) 0%, transparent 47%),
+    linear-gradient(145deg, #fff 0%, #fff 60%, #fafafa 100%);
 }
 
 /* Subtle modern architectural dot grid */
@@ -501,7 +503,71 @@ input, select, textarea { font-size: 16px; }
 }
 
 [data-theme="light"] .hero-bg::after {
-  background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(240, 235, 225, 0.5) 100%);
+  background: radial-gradient(circle at 50% 50%, transparent 55%, rgba(255, 255, 255, 0.28) 100%);
+}
+
+[data-theme="light"] .hero-bg::before { opacity: 0.06; }
+[data-theme="light"] .hero-grain { opacity: 0.012; }
+
+.hero-drink-image,
+.hero-hot-steam,
+.hero-liquid {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 900ms ease-in-out, transform 600ms ease-out;
+}
+
+.hero-drink-image.is-visible,
+.hero-hot-steam.is-visible,
+.hero-liquid.is-visible { opacity: 1; }
+
+.hero-liquid {
+  position: absolute;
+  z-index: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  -webkit-mask-image: radial-gradient(ellipse, #000 42%, transparent 72%);
+  mask-image: radial-gradient(ellipse, #000 42%, transparent 72%);
+}
+
+.hero-liquid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(110deg, transparent 22%, rgba(255,255,255,.32) 42%, transparent 62%);
+  animation: heroLiquidShimmer 5s ease-in-out infinite;
+}
+
+.hero-liquid-hot { top: 20%; left: 27%; width: 47%; height: 17%; transform: rotate(-1deg); }
+.hero-liquid-iced { top: 17%; left: 30%; width: 41%; height: 13%; transform: rotate(-2deg); }
+.hero-liquid-iced::before { background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,.48) 45%, transparent 65%); }
+
+@keyframes heroLiquidShimmer {
+  0%, 100% { transform: translateX(-70%); opacity: .12; }
+  50% { transform: translateX(70%); opacity: .38; }
+}
+
+.hero-drink-button {
+  min-height: 44px;
+  padding: .55rem 1rem;
+  border: 1px solid var(--bg-border);
+  border-radius: 999px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: .78rem;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(0,0,0,.07);
+  transition: background-color .25s ease, color .25s ease, border-color .25s ease, transform .25s ease;
+}
+.hero-drink-button:hover { transform: translateY(-2px); }
+.hero-drink-button.is-active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.hero-drink-button:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-drink-image, .hero-hot-steam, .hero-liquid, .hero-drink-button { transition: none; }
+  .hero-liquid::before, .animate-hero-float, .animate-steam-rise-1, .animate-steam-rise-2,
+  .animate-steam-rise-3, .animate-vapor-haze { animation: none; }
 }
 
 .hero-content { position: relative; z-index: 2; }
@@ -696,6 +762,7 @@ input, select, textarea { font-size: 16px; }
 
 .how-step {
   position: relative;
+  z-index: 20;
   padding: 1.35rem 1.2rem 1.4rem;
   border-radius: 1.15rem;
   background: var(--bg-card);
@@ -759,6 +826,8 @@ input, select, textarea { font-size: 16px; }
 }
 
 .join-card {
+  position: relative;
+  z-index: 20;
   max-width: 640px;
   margin: 0 auto;
   padding: 2.4rem 1.5rem;
@@ -843,6 +912,7 @@ input, select, textarea { font-size: 16px; }
    ═══════════════════════════════════════════════════════════ */
 .site-footer {
   position: relative;
+  z-index: 20;
   margin-top: auto;
   background: var(--bg-surface);
   border-top: 1px solid var(--bg-border);

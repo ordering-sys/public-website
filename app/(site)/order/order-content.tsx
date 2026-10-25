@@ -337,7 +337,7 @@ export default function OrderContent() {
     if (!canOrder || !table || !token || cart.length === 0) return
     setSubmitting(true)
     try {
-      const result = await submitOrderAction({ tableId: table, token, location: await getLocation(), items: cart, total: cartTotal })
+      const result = await submitOrderAction({ tableId: table, token, location: await getLocation(), items: cart })
       if (!result.success || !result.orderId) throw new Error(result.error ?? 'Failed')
       router.push(`/tracking/${result.orderId}`)
     } catch (err) {

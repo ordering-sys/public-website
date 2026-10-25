@@ -135,9 +135,8 @@ export function LanguageDropdown() {
     // Trigger fast spin animation immediately
     setIsSpinningFast(true)
 
-    if (newLang !== lang) {
-      setLang(newLang)
-    }
+    // Always invoke setLang so state & storage sync immediately
+    setLang(newLang)
 
     // Return to smooth slow continuous spin after 850ms
     spinTimeoutRef.current = setTimeout(() => {
@@ -271,7 +270,7 @@ export function LanguageDropdown() {
                     className="text-xs leading-normal font-medium mt-0.5"
                     style={{ color: 'var(--text-secondary)' }}
                   >
-                    English
+                    English (EN)
                   </p>
                 </div>
               </div>
@@ -316,7 +315,7 @@ export function LanguageDropdown() {
                     className="text-xs leading-normal font-medium mt-0.5"
                     style={{ color: 'var(--text-secondary)' }}
                   >
-                    Khmer
+                    Khmer (KM)
                   </p>
                 </div>
               </div>

@@ -68,6 +68,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const setLang = useCallback((l: Lang) => {
     setLangState(l)
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('cafe-lang', l)
+        document.documentElement.setAttribute('lang', l === 'km' ? 'km' : 'en')
+      } catch (err) {
+        console.error('Failed to save language preference:', err)
+      }
+    }
   }, [])
 
   /* Prevent flash: render nothing until localStorage is read */

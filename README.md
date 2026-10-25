@@ -28,6 +28,8 @@ A modern, mobile-first restaurant ordering system where customers scan QR codes 
 
 ## Docker environment
 
+To show guest Wi-Fi details after a table QR and location check, set `GUEST_WIFI_SSID` and `GUEST_WIFI_PASSWORD` in the server environment (or use `GUEST_WIFI_SSID_FILE` and `GUEST_WIFI_PASSWORD_FILE` for mounted secret files). Keep these values out of `NEXT_PUBLIC_*` variables. If they are unset, the Wi-Fi card asks guests to contact staff.
+
 Build from the `public-website` directory. Next.js compiles `NEXT_PUBLIC_*` variables into browser code, so provide them when building the image:
 
 ```bash

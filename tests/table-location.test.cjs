@@ -67,3 +67,23 @@ test('rejects outside locations and inaccurate fixes without expanding the radiu
   await assert.rejects(access().checkTableAccess('T1', 'secret', { ...fix, latitude: fix.latitude + 0.01 }), /within 100 meters/)
   await assert.rejects(access().checkTableAccess('T1', 'secret', { ...fix, accuracy: 101 }), /accuracy/)
 })
+
+test('guest Wi-Fi details are returned only after table access succeeds', async () => {
+  let checked = 0
+  const authorized = load('app/table-access-actions.ts', {
+    '@/lib/table-access': { checkTableAccess: async () => { checked++ } },
+    '@/lib/server-secret': { serverSecret: name => name === 'GUEST_WIFI_SSID' ? 'Cafe Guest' : 'guest-password' },
+  })
+  assert.deepEqual(await authorized.getGuestWifi('T1', 'secret', fix), {
+    success: true, ssid: 'Cafe Guest', password: 'guest-password',
+  })
+  assert.equal(checked, 1)
+
+  let secretReads = 0
+  const denied = load('app/table-access-actions.ts', {
+    '@/lib/table-access': { checkTableAccess: async () => { throw new Error('Invalid QR') } },
+    '@/lib/server-secret': { serverSecret: () => { secretReads++; return 'hidden' } },
+  })
+  assert.equal((await denied.getGuestWifi('T1', 'invalid', fix)).success, false)
+  assert.equal(secretReads, 0)
+})

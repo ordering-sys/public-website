@@ -91,8 +91,8 @@ export function SiteFooter() {
   const explore = [
     { href: homeHref, label: t('navHome', lang) },
     { href: orderHref, label: t('navMenu', lang) },
-    { href: `${homeHref}#about`, label: t('navAbout', lang) },
-    { href: `${homeHref}#contact`, label: t('navContact', lang) },
+    { href: `/about${qs}`, label: t('navAbout', lang) },
+    { href: `/contact${qs}`, label: t('navContact', lang) },
   ]
 
   const social = [
@@ -108,7 +108,7 @@ export function SiteFooter() {
     >
       <div className="site-footer-accent" aria-hidden="true" />
 
-      <div className="mx-auto max-w-6xl px-6 pt-14 pb-8">
+      <div className="mx-auto max-w-6xl px-6 pt-14 pb-8 relative z-20">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
 
           {/* Brand */}
@@ -157,7 +157,7 @@ export function SiteFooter() {
           </div>
 
           {/* Visit */}
-          <div id="contact">
+          <div>
             <p className="label-overline mb-4">{t('footerVisit', lang)}</p>
             <ul className="flex flex-col gap-3.5" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
               <li className="footer-meta">
@@ -214,7 +214,7 @@ export function SiteFooter() {
       </div>
 
       {/* Bottom bar */}
-      <div className="footer-bottom">
+      <div className="footer-bottom relative z-20">
         <div className="mx-auto max-w-6xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-xs m-0" style={{ color: 'var(--text-dim)' }}>
             {t('footerRights', lang)}

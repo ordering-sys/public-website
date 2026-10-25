@@ -3,17 +3,19 @@
 import { MenuImage } from '@/components/site/MenuImage'
 
 import Link from 'next/link'
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useState, type ReactNode } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useTheme } from '@/lib/theme-context'
 import { t } from '@/lib/i18n'
 import { tableQs } from '@/lib/table-qs'
+import { getLocation } from '@/lib/location'
+import { getGuestWifi } from '@/app/table-access-actions'
 import { createClient } from '@/lib/supabase/client'
 import type { MenuItem } from '@/lib/types'
-import { ArrowRight, Compass, Sparkles } from 'lucide-react'
+import { ArrowRight, Coffee, Compass, KeyRound, MapPin, Plus, Sparkles, Wifi } from 'lucide-react'
 import { Hero3DShowcase } from '@/components/site/Hero3DShowcase'
 import { CoffeeBeanRain } from '@/components/site/CoffeeBeanRain'
-import { IconBean, IconCup, IconLeaf, IconPlus, IconStar } from '@/components/site/icons'
+import { IconBean, IconStar } from '@/components/site/icons'
 
 function LandingContent() {
   const { lang, theme } = useTheme()
@@ -22,9 +24,27 @@ function LandingContent() {
   const table = searchParams.get('table')
   const token = searchParams.get('token')
   const qs = tableQs(table, token)
+  const hasTableQr = Boolean(table?.trim() && token?.trim())
   const [featured, setFeatured] = useState<MenuItem[]>([])
   const [menuError, setMenuError] = useState(false)
   const [menuLoading, setMenuLoading] = useState(true)
+  const [wifiState, setWifiState] = useState<{ key: string; success: boolean; ssid: string; password: string } | null>(null)
+
+  useEffect(() => {
+    if (!table?.trim() || !token?.trim()) return
+    const key = `${table}\u0000${token}`
+    let active = true
+    async function loadWifi() {
+      try {
+        const result = await getGuestWifi(table!, token!, await getLocation())
+        if (active) setWifiState({ key, ...result })
+      } catch {
+        if (active) setWifiState({ key, success: false, ssid: '', password: '' })
+      }
+    }
+    void loadWifi()
+    return () => { active = false }
+  }, [table, token])
 
   useEffect(() => {
     const supabase = createClient()
@@ -51,12 +71,12 @@ function LandingContent() {
     return () => { active = false; window.removeEventListener('focus', loadFeatured) }
   }, [])
 
-  const features = [
+  const features: { icon: ReactNode; title: string; desc: string; href?: string }[] = [
     { icon: <IconBean />, title: t('feat1Title', lang), desc: t('feat1Desc', lang) },
-    { icon: <IconLeaf />, title: t('feat2Title', lang), desc: t('feat2Desc', lang) },
-    { icon: <IconCup />, title: t('feat3Title', lang), desc: t('feat3Desc', lang) },
+    { icon: <MapPin className="w-8 h-8" strokeWidth={1.7} aria-hidden="true" />, title: t('feat2Title', lang), desc: t('feat2Desc', lang), href: `/map${qs}` },
     { icon: <IconStar />, title: t('feat4Title', lang), desc: t('feat4Desc', lang) },
   ]
+  const wifi = wifiState?.key === `${table}\u0000${token}` ? wifiState : null
 
   const how = [
     { n: '01', title: t('how1Title', lang), desc: t('how1Desc', lang) },
@@ -68,20 +88,21 @@ function LandingContent() {
   const orderHref = `/order${qs}`
 
   return (
-    <div>
+    <div className="relative">
+      {/* ── 3D Coffee Bean Rain (Smooth falling rainwater effect down to footer end) ── */}
+      <CoffeeBeanRain />
+
+      {/* ── Hero Section ── */}
       <section className="hero-section relative">
         <div className="hero-bg" aria-hidden="true" />
         <div className="hero-grain" aria-hidden="true" />
-
-        {/* ── 3D Coffee Bean Rain (Smooth falling like rainwater) ── */}
-        <CoffeeBeanRain />
 
         {/* Dynamic Glowing Aurora Orbs */}
         <div
           className="absolute -top-16 -right-16 w-[360px] sm:w-[480px] h-[360px] sm:h-[480px] rounded-full pointer-events-none filter blur-[95px] opacity-60 animate-aurora-1"
           style={{
             background: isLight
-              ? 'radial-gradient(circle, rgba(240, 167, 66, 0.3) 0%, rgba(217, 119, 6, 0.1) 50%, transparent 75%)'
+              ? 'radial-gradient(circle, rgba(240, 167, 66, 0.13) 0%, rgba(217, 119, 6, 0.04) 50%, transparent 75%)'
               : 'radial-gradient(circle, rgba(240, 167, 66, 0.45) 0%, rgba(217, 119, 6, 0.15) 50%, transparent 75%)',
           }}
           aria-hidden="true"
@@ -90,13 +111,13 @@ function LandingContent() {
           className="absolute top-1/4 -left-20 w-[320px] sm:w-[420px] h-[320px] sm:h-[420px] rounded-full pointer-events-none filter blur-[90px] opacity-45 animate-aurora-2"
           style={{
             background: isLight
-              ? 'radial-gradient(circle, rgba(48, 201, 160, 0.28) 0%, rgba(16, 185, 129, 0.08) 50%, transparent 75%)'
+              ? 'radial-gradient(circle, rgba(48, 201, 160, 0.11) 0%, rgba(16, 185, 129, 0.03) 50%, transparent 75%)'
               : 'radial-gradient(circle, rgba(48, 201, 160, 0.4) 0%, rgba(16, 185, 129, 0.1) 50%, transparent 75%)',
           }}
           aria-hidden="true"
         />
 
-        <div className="hero-content w-full relative z-10">
+        <div className="hero-content w-full relative z-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 py-14 sm:py-20 lg:py-24">
             <div className="grid lg:grid-cols-12 gap-10 lg:gap-8 items-center">
               {/* Left Column: Headline & Action CTA */}
@@ -213,7 +234,7 @@ function LandingContent() {
               </div>
 
               {/* Right Column: Interactive 3D Showcase */}
-              <div className="lg:col-span-5 flex justify-center lg:justify-end">
+              <div className="lg:col-span-5 flex justify-center lg:justify-end relative z-20">
                 <Hero3DShowcase />
               </div>
             </div>
@@ -223,21 +244,29 @@ function LandingContent() {
         {/* Smooth Organic Transition To Next Section */}
         <div
           aria-hidden="true"
-          className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none z-10"
+          className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none z-20"
           style={{
             background: 'linear-gradient(to bottom, transparent, var(--bg-surface))',
           }}
         />
       </section>
 
-      <section style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--bg-border)', borderBottom: '1px solid var(--bg-border)' }}>
-        <div className="mx-auto max-w-6xl px-6 py-12">
+      {/* ── Section 1: Features Bar (Image 1 circled: beans shouldn't be seen here) ── */}
+      <section
+        className="relative z-30 overflow-hidden"
+        style={{
+          background: 'var(--bg-surface)',
+          borderTop: '1px solid var(--bg-border)',
+          borderBottom: '1px solid var(--bg-border)',
+        }}
+      >
+        <div className="mx-auto max-w-6xl px-6 py-12 relative z-30">
           {menuError && <p role="alert">{lang === 'km' ? 'មិនអាចទាញយកមុខម្ហូបបានទេ។ សូមព្យាយាមម្តងទៀត។' : 'Could not load the menu. Please refresh to try again.'}</p>}
           {menuLoading && <p role="status">{lang === 'km' ? 'កំពុងទាញយកមុខម្ហូប…' : 'Loading menu…'}</p>}
           {!menuLoading && !menuError && !featured.length && <p>{lang === 'km' ? 'មិនទាន់មានមុខម្ហូបទេ។' : 'No menu items available yet.'}</p>}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {features.map((f, i) => (
-              <div key={i} className="card card-hover p-5 flex flex-col items-center text-center gap-3">
+          <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${hasTableQr ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
+            {features.map((f, i) => {
+              const content = <>
                 <div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center"
                   style={{ background: 'var(--primary-glow)', color: 'var(--primary)', border: '1px solid rgba(240,167,66,0.22)' }}
@@ -248,14 +277,35 @@ function LandingContent() {
                   <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{f.title}</p>
                   <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--text-dim)' }}>{f.desc}</p>
                 </div>
+              </>
+              const cardClass = 'card card-hover p-5 flex flex-col items-center text-center gap-3 relative z-20'
+              return f.href
+                ? <Link key={i} href={f.href} className={`${cardClass} focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600`} aria-label={f.title}>{content}</Link>
+                : <div key={i} className={cardClass}>{content}</div>
+            })}
+            {hasTableQr && (
+              <div className="card p-5 flex flex-col items-center text-center gap-3 relative z-20">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'var(--primary-glow)', color: 'var(--primary)', border: '1px solid rgba(240,167,66,0.22)' }}>
+                  <Wifi className="w-8 h-8" strokeWidth={1.7} aria-hidden="true" />
+                </div>
+                <div className="w-full min-w-0">
+                  <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{t('wifiTitle', lang)}</p>
+                  {wifi?.success ? (
+                    <div className="mt-2 space-y-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                      <p><span className="font-semibold">{t('wifiName', lang)}:</span> <span className="break-all select-text">{wifi.ssid}</span></p>
+                      <p className="flex items-center justify-center gap-1 flex-wrap"><KeyRound className="w-3.5 h-3.5" aria-hidden="true" /><span className="font-semibold">{t('wifiPassword', lang)}:</span> <span className="break-all select-text">{wifi.password}</span></p>
+                    </div>
+                  ) : <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--text-dim)' }}>{wifi ? t('wifiUnavailable', lang) : t('wifiLoading', lang)}</p>}
+                </div>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
 
-      <section className="section">
-        <div className="mx-auto max-w-6xl px-6">
+      {/* ── Section 2: Three steps to your cup (Image 2 circle 1: beans SHOULD be seen) ── */}
+      <section className="section relative z-10" style={{ background: 'transparent' }}>
+        <div className="mx-auto max-w-6xl px-6 relative z-10">
           <div className="text-center max-w-xl mx-auto mb-10">
             <p className="label-overline mb-2">{t('howBadge', lang)}</p>
             <h2 className="heading-section">{t('howTitle', lang)}</h2>
@@ -263,7 +313,7 @@ function LandingContent() {
           </div>
           <div className="grid md:grid-cols-3 gap-4">
             {how.map(step => (
-              <article key={step.n} className="how-step">
+              <article key={step.n} className="how-step relative z-20">
                 <div className="how-num">{step.n}</div>
                 <h3 className="font-bold serif text-lg mb-2" style={{ color: 'var(--text-primary)' }}>{step.title}</h3>
                 <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{step.desc}</p>
@@ -273,26 +323,34 @@ function LandingContent() {
         </div>
       </section>
 
-      <section className="section" style={{ paddingTop: 0 }}>
-        <div className="mx-auto max-w-6xl px-6">
+      {/* ── Section 3: Popular Picks (Image 2 circle 2: beans SHOULD be seen BEHIND card) ── */}
+      <section className="section relative z-10" style={{ paddingTop: 0, background: 'transparent' }}>
+        <div className="mx-auto max-w-6xl px-6 relative z-10">
           <div className="flex items-end justify-between mb-8 flex-wrap gap-3">
             <div>
               <p className="label-overline mb-2">{t('popularBadge', lang)}</p>
               <h2 className="heading-section">{t('popularTitle', lang)}</h2>
               <div className="divider-primary mt-3" />
             </div>
-            <Link href={orderHref} className="text-sm font-semibold" style={{ color: 'var(--primary)', textDecoration: 'none' }}>
+            <Link href={orderHref} className="text-sm font-semibold relative z-20" style={{ color: 'var(--primary)', textDecoration: 'none' }}>
               {t('viewFullMenu', lang)}
             </Link>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {displayItems.map((item, i) => (
-              <div key={item.id} className={`card card-hover anim-${i}`} style={{ overflow: 'hidden' }}>
+              <div
+                key={item.id}
+                className={`card card-hover anim-${i} relative z-20`}
+                style={{
+                  overflow: 'hidden',
+                  background: 'var(--bg-card)',
+                }}
+              >
                 <div className="w-full h-44 flex items-center justify-center relative overflow-hidden dish-ph">
                   <MenuImage src={item.image_url} alt={item.name_en} className="w-full h-full object-cover" loading="lazy">
                     <div className="flex flex-col items-center gap-2" style={{ color: 'var(--primary)', opacity: 0.55 }}>
-                      <IconCup />
+                      <Coffee className="w-6 h-6" aria-hidden="true" />
                       <span className="text-[10px] tracking-widest uppercase">{item.category}</span>
                     </div>
                   </MenuImage>
@@ -320,7 +378,7 @@ function LandingContent() {
                       style={{ background: 'var(--primary)', color: 'var(--text-invert)', boxShadow: 'var(--shadow-primary)', minHeight: 'unset' }}
                       aria-label={`Order ${item.name_en}`}
                     >
-                      <IconPlus />
+                      <Plus className="w-4 h-4" aria-hidden="true" />
                     </Link>
                   </div>
                 </div>
@@ -330,10 +388,26 @@ function LandingContent() {
         </div>
       </section>
 
-      <section id="about" style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--bg-border)', borderBottom: '1px solid var(--bg-border)' }}>
-        <div className="mx-auto max-w-6xl px-6 py-16">
+      {/* ── Section 4: Our Story (Image 3: beans seen falling through) ── */}
+      <section
+        id="about"
+        className="relative z-10"
+        style={{
+          background: 'transparent',
+          borderTop: '1px solid var(--bg-border)',
+          borderBottom: '1px solid var(--bg-border)',
+        }}
+      >
+        <div className="mx-auto max-w-6xl px-6 py-16 relative z-10">
           <div className="grid md:grid-cols-2 gap-10 items-center">
-            <div className="relative rounded-2xl overflow-hidden" style={{ minHeight: 340, background: 'linear-gradient(145deg, #2a2118, #12100d)', border: '1px solid var(--bg-border)' }}>
+            <div
+              className="relative z-20 rounded-2xl overflow-hidden"
+              style={{
+                minHeight: 340,
+                background: 'linear-gradient(145deg, #2a2118, #12100d)',
+                border: '1px solid var(--bg-border)',
+              }}
+            >
               <div aria-hidden="true" style={{ position: 'absolute', top: '-30%', right: '-20%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(240,167,66,0.22) 0%, transparent 70%)' }} />
               <div aria-hidden="true" style={{ position: 'absolute', bottom: '-10%', left: '-10%', width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(48,201,160,0.12) 0%, transparent 70%)' }} />
               <div className="relative z-10 flex items-center justify-center h-full p-10" style={{ minHeight: 340 }}>
@@ -352,7 +426,7 @@ function LandingContent() {
               </div>
             </div>
 
-            <div>
+            <div className="relative z-20">
               <p className="label-overline mb-3">{t('storyBadge', lang)}</p>
               <h2 className="heading-section mb-4">{t('storyTitle', lang)}</h2>
               <div className="divider-primary mb-6" />
@@ -367,9 +441,10 @@ function LandingContent() {
         </div>
       </section>
 
-      <section className="section">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="join-card text-center">
+      {/* ── Section 5: Join Our Coffee Club (Image 3: beans seen falling through down to footer) ── */}
+      <section className="section relative z-10" style={{ background: 'transparent' }}>
+        <div className="mx-auto max-w-6xl px-6 relative z-10">
+          <div className="join-card relative z-20 text-center">
             <h2 className="heading-section mb-3">{t('joinTitle', lang)}</h2>
             <p className="mb-8 text-sm" style={{ color: 'var(--text-secondary)' }}>{t('joinDesc', lang)}</p>
             <form className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto" onSubmit={e => e.preventDefault()}>
