@@ -130,8 +130,18 @@ const strings = {
   detailDescription:  { en: 'Description',                     km: 'ការពិពណ៌នា' },
   detailNoDesc:       { en: 'No description available.',       km: 'គ្មានការពិពណ៌នា។' },
   detailSubtotal:     { en: 'Subtotal',                        km: 'សរុបរង' },
+<<<<<<< Updated upstream
+  sugarLevel:         { en: 'Sugar level',                     km: 'កម្រិតជាតិស្ករ' },
+  noSugar:            { en: 'No sugar',                        km: 'គ្មានស្ករ' },
+  sugarPercent:       { en: '% sugar',                         km: '% ស្ករ' },
+=======
+  sugarLevel:         { en: 'Sugar level',                      km: 'កម្រិតជាតិស្ករ' },
+  sugarOptionsBadge:  { en: 'Sugar options',                    km: 'ជ្រើសរើសកម្រិតស្ករ' },
+  sugarNoSugar:       { en: 'No sugar (0%)',                    km: 'គ្មានស្ករ (0%)' },
+  sugarSamePrice:     { en: 'Same price for every sugar level.', km: 'តម្លៃនៅដដែលសម្រាប់គ្រប់កម្រិតជាតិស្ករ។' },
+>>>>>>> Stashed changes
   notesLabel:         { en: 'Special Request',                 km: 'សំណើរពិសេស' },
-  notesPlaceholder:   { en: 'e.g. Less sugar, no ice, extra hot…', km: 'ឧ. ស្ករតិច គ្មានទឹកកក ក្ដៅណាស់…' },
+  notesPlaceholder:   { en: 'e.g. no ice, extra hot…',         km: 'ឧ. គ្មានទឹកកក ក្ដៅណាស់…' },
   notesHint:          { en: 'Optional — sent directly to kitchen', km: 'ជម្រើស — ផ្ញើទៅផ្ទះបាយផ្ទាល់' },
   notesInCart:        { en: 'Note',                            km: 'កំណត់ចំណាំ' },
   available:          { en: 'Available',                       km: 'មានផ្គត់ផ្គង់' },

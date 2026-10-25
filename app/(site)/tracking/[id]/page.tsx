@@ -186,6 +186,7 @@ export default function TrackingPage() {
                   <p className="text-xs" style={{ color: 'var(--text-dim)' }}>
                     {lang === 'km' ? item.name_en : item.name_km} × {item.quantity}
                   </p>
+                  {item.sugar_level != null && <p className="mt-1 text-xs" style={{ color: 'var(--primary)' }}>{t('sugarLevel', lang)}: {item.sugar_level}%</p>}
                 </div>
                 <p className="font-bold text-sm ml-3" style={{ color: 'var(--primary)' }}>
                   ${(item.price * item.quantity).toFixed(2)}

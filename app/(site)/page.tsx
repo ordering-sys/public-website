@@ -53,7 +53,7 @@ function LandingContent() {
       try {
         const { data, error } = await supabase
       .from('menu_items')
-      .select('id, name_km, name_en, description, price, category, image_url, available')
+      .select('id, name_km, name_en, description, price, category, image_url, available, sugar_levels, default_sugar_level')
       .eq('available', true)
       .order('name_en')
       .limit(4)
@@ -368,6 +368,11 @@ function LandingContent() {
                   <p className="text-xs mt-0.5 mb-3" style={{ color: 'var(--text-dim)' }}>
                     {lang === 'km' ? item.name_en : item.name_km}
                   </p>
+                  {!!item.sugar_levels?.length && (
+                    <p className="mb-3 text-[10px] font-medium leading-relaxed" style={{ color: 'var(--primary)' }}>
+                      {t('sugarOptionsBadge', lang)} · {item.sugar_levels.map(level => level === 0 ? t('sugarNoSugar', lang) : `${level}%`).join(', ')}
+                    </p>
+                  )}
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-base" style={{ color: 'var(--primary)' }}>
                       ${Number(item.price).toFixed(2)}

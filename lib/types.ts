@@ -6,12 +6,17 @@ export interface MenuItem {
   price: number
   category: string
   image_url?: string
+  sugar_levels?: number[]
+  default_sugar_level?: number | null
   available: boolean
+  sugar_levels?: number[]
+  default_sugar_level?: number | null
 }
 
 export interface CartItem extends MenuItem {
   quantity: number
   notes?: string
+  sugar_level?: number
 }
 
 export interface Table {
