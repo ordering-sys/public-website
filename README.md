@@ -28,6 +28,8 @@ A modern, mobile-first restaurant ordering system where customers scan QR codes 
 
 ## Docker environment
 
+To show guest Wi-Fi details after a table QR and location check, set `GUEST_WIFI_SSID` and `GUEST_WIFI_PASSWORD` in the server environment (or use `GUEST_WIFI_SSID_FILE` and `GUEST_WIFI_PASSWORD_FILE` for mounted secret files). Keep these values out of `NEXT_PUBLIC_*` variables. If they are unset, the Wi-Fi card asks guests to contact staff.
+
 Build from the `public-website` directory. Next.js compiles `NEXT_PUBLIC_*` variables into browser code, so provide them when building the image:
 
 ```bash
@@ -254,3 +256,11 @@ MIT License - feel free to use for your restaurant!
 **Current Version:** Phase 1.5 (Customer + Admin QR)  
 **Status:** Production-ready for QR generation  
 **Next:** Menu Management or Kitchen Display System
+
+## Telegram order images
+
+New order alerts send the existing order summary followed by a photo for each ordered item with a saved `menu_items.image_url`. Photo captions include the order, table, quantity, item names, and notes. The same alerts go to the configured default, admin, and kitchen chats; duplicate chat IDs are sent only once.
+
+R2 image URLs must be publicly accessible so Telegram can fetch them. Items without images remain in the text summary. A failed image lookup or photo delivery does not fail a saved order or remove its text alert. Telegram can reject inaccessible images or unsupported photo formats; check server logs if a photo is missing.
+
+Run the mocked notification checks with `node --test scripts/test-telegram.mjs`. These checks do not send real Telegram messages.

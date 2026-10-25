@@ -1,0 +1,121 @@
+'use client'
+
+import Link from 'next/link'
+import { Suspense } from 'react'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { Home, UtensilsCrossed, Sparkles, PhoneCall } from 'lucide-react'
+import { t } from '@/lib/i18n'
+import { tableQs } from '@/lib/table-qs'
+import { useTheme } from '@/lib/theme-context'
+
+function MobileBottomNavInner() {
+  const { lang } = useTheme()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const qs = tableQs(searchParams.get('table'), searchParams.get('token'))
+
+  const navItems = [
+    {
+      key: 'home' as const,
+      label: t('navHome', lang),
+      href: `/${qs}`,
+      icon: Home,
+      isActive: pathname === '/',
+    },
+    {
+      key: 'menu' as const,
+      label: t('navMenu', lang),
+      href: `/order${qs}`,
+      icon: UtensilsCrossed,
+      isActive: pathname.startsWith('/order'),
+    },
+    {
+      key: 'about' as const,
+      label: t('navAbout', lang),
+      href: `/about${qs}`,
+      icon: Sparkles,
+      isActive: pathname === '/about',
+    },
+    {
+      key: 'contact' as const,
+      label: t('navContact', lang),
+      href: `/contact${qs}`,
+      icon: PhoneCall,
+      isActive: pathname === '/contact',
+    },
+  ]
+
+  return (
+    <nav
+      className="mobile-bottom-nav md:hidden fixed bottom-0 left-0 right-0 z-40 transition-transform duration-300"
+      aria-label="Mobile Navigation Bar"
+    >
+      <div className="mobile-bottom-nav-inner max-w-md mx-auto grid grid-cols-4 items-center justify-around px-1.5 py-1.5">
+        {navItems.map((item) => {
+          const Icon = item.icon
+          const active = item.isActive
+
+          return (
+            <Link
+              key={item.key}
+              href={item.href}
+              className={`mobile-nav-btn flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all duration-200 group relative ${
+                active ? 'active-nav-item' : 'inactive-nav-item'
+              }`}
+              style={{ textDecoration: 'none' }}
+              aria-current={active ? 'page' : undefined}
+            >
+              {/* Active top glowing indicator bar */}
+              {active && (
+                <span
+                  className="mobile-nav-indicator absolute -top-1 w-8 h-1 rounded-full animate-fade"
+                  style={{
+                    background: 'linear-gradient(90deg, var(--primary-light), var(--primary))',
+                    boxShadow: '0 0 10px var(--primary)',
+                  }}
+                  aria-hidden="true"
+                />
+              )}
+
+              {/* Icon with smooth bounce & highlight wrapper */}
+              <div
+                className={`relative flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${
+                  active ? 'scale-110' : 'group-hover:scale-105 active:scale-95'
+                }`}
+                style={{
+                  background: active ? 'rgba(240, 167, 66, 0.16)' : 'transparent',
+                  color: active ? 'var(--primary)' : 'var(--text-secondary)',
+                }}
+              >
+                <Icon
+                  className="w-5 h-5 transition-transform duration-200"
+                  strokeWidth={active ? 2.3 : 1.9}
+                />
+              </div>
+
+              {/* Text label with Khmer / English support */}
+              <span
+                className={`text-[9.5px] sm:text-[11px] leading-tight tracking-tight text-center truncate max-w-[62px] transition-colors duration-200 ${
+                  active ? 'font-bold' : 'font-medium'
+                }`}
+                style={{
+                  color: active ? 'var(--primary)' : 'var(--text-secondary)',
+                }}
+              >
+                {item.label}
+              </span>
+            </Link>
+          )
+        })}
+      </div>
+    </nav>
+  )
+}
+
+export function MobileBottomNav() {
+  return (
+    <Suspense fallback={null}>
+      <MobileBottomNavInner />
+    </Suspense>
+  )
+}
