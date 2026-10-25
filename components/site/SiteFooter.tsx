@@ -108,7 +108,7 @@ export function SiteFooter() {
     >
       <div className="site-footer-accent" aria-hidden="true" />
 
-      <div className="mx-auto max-w-6xl px-6 pt-14 pb-8">
+      <div className="mx-auto max-w-6xl px-6 pt-14 pb-8 relative z-20">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
 
           {/* Brand */}
@@ -214,7 +214,7 @@ export function SiteFooter() {
       </div>
 
       {/* Bottom bar */}
-      <div className="footer-bottom">
+      <div className="footer-bottom relative z-20">
         <div className="mx-auto max-w-6xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-xs m-0" style={{ color: 'var(--text-dim)' }}>
             {t('footerRights', lang)}

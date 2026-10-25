@@ -19,19 +19,53 @@ function escapeTelegramHtml(value: string): string {
 
 export async function submitOrder(data: {
   tableId: string
+  token: string
   items: CartItem[]
-  total: number
 }) {
-  const supabase = await createClient()
-
   try {
+    if (!data || typeof data.tableId !== 'string' || typeof data.token !== 'string' ||
+        !data.tableId.trim() || !data.token.trim() || data.tableId.length > 64 || data.token.length > 256 ||
+        !Array.isArray(data.items) || data.items.length === 0 || data.items.length > 30) {
+      return { success: false, error: 'Invalid order' }
+    }
+    const requested = data.items.map(item => ({ id: item?.id, quantity: item?.quantity, notes: item?.notes }))
+    if (requested.some(item => typeof item.id !== 'string' || item.id.length === 0 || item.id.length > 128 ||
+        !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 99 ||
+        (item.notes !== undefined && (typeof item.notes !== 'string' || item.notes.length > 500))) ||
+        new Set(requested.map(item => item.id)).size !== requested.length ||
+        requested.reduce((sum, item) => sum + item.quantity, 0) > 100) {
+      return { success: false, error: 'Invalid order items' }
+    }
+    const supabase = await createClient()
+    const { data: table, error: tableError } = await supabase.from('tables')
+      .select('number').eq('number', data.tableId).eq('token', data.token).eq('active', true).single()
+    if (tableError || !table) return { success: false, error: 'Invalid table QR code' }
+    const { data: menu, error: menuError } = await supabase.from('menu_items')
+      .select('id, name_km, name_en, description, price, category, image_url, available')
+      .in('id', requested.map(item => item.id)).eq('available', true)
+    if (menuError || !menu || menu.length !== requested.length) {
+      return { success: false, error: 'Menu changed; please reload' }
+    }
+    const byId = new Map(menu.map(item => [item.id, item]))
+    const pricedItems: CartItem[] = []
+    let cents = 0
+    for (const item of requested) {
+      const saved = byId.get(item.id)
+      if (!saved || typeof saved.price !== 'number' || !Number.isFinite(saved.price) || saved.price < 0 ||
+          Math.abs(saved.price * 100 - Math.round(saved.price * 100)) > 0.000001) {
+        return { success: false, error: 'Invalid menu price' }
+      }
+      cents += Math.round(saved.price * 100) * item.quantity
+      pricedItems.push({ ...saved, quantity: item.quantity, notes: item.notes?.trim() || undefined })
+    }
+    const total = cents / 100
     /* ── Insert order ── */
     const { data: order, error } = await supabase
       .from('orders')
       .insert({
-        table_id: data.tableId,
-        items:    data.items,
-        total:    data.total,
+        table_id: table.number,
+        items:    pricedItems,
+        total,
         status:   'pending',
       })
       .select()
@@ -40,7 +74,7 @@ export async function submitOrder(data: {
     if (error) throw error
 
     // Send Telegram notification (optional)
-    const itemList = data.items
+    const itemList = pricedItems
       .map((item, index) => {
         const name = escapeTelegramHtml(item.name_en || item.name_km)
         const khmerName = item.name_en && item.name_km
@@ -67,15 +101,11 @@ export async function submitOrder(data: {
     // A lookup failure must not prevent an already-created order's text alert.
     const photos: TelegramOrderPhoto[] = []
     try {
-      const { data: menu, error: menuError } = await supabase.from('menu_items')
-        .select('id, image_url')
-        .in('id', [...new Set(data.items.map(item => item.id))])
-      if (menuError) throw menuError
-      for (const item of data.items) {
-        const url = menu?.find(entry => entry.id === item.id)?.image_url
+      for (const item of pricedItems) {
+        const url = item.image_url
         if (!url) continue
         photos.push({ url, caption:
-          `Order #${order.id.slice(0, 8).toUpperCase()} · Table ${data.tableId}\n` +
+          `Order #${order.id.slice(0, 8).toUpperCase()} · Table ${table.number}\n` +
           `${item.quantity} × ${item.name_en || item.name_km}\n` +
           (item.name_en && item.name_km ? `${item.name_km}\n` : '') +
           (item.notes?.trim() ? `📝 ${item.notes.trim()}` : ''),
@@ -88,9 +118,9 @@ export async function submitOrder(data: {
     await sendTelegram(
       `🍽️ <b>NEW ORDER · ការកុម្ម៉ង់ថ្មី</b>\n\n` +
         `<b>Order:</b> <code>#${escapeTelegramHtml(order.id.slice(0, 8).toUpperCase())}</code>\n` +
-        `<b>Table / តុ:</b> <b>${escapeTelegramHtml(data.tableId)}</b>\n\n` +
+        `<b>Table / តុ:</b> <b>${escapeTelegramHtml(table.number)}</b>\n\n` +
         `<b>ITEMS · បញ្ជីមុខម្ហូប</b>\n${itemList}\n\n` +
-        `<b>Total / សរុប: $${data.total.toFixed(2)}</b>` +
+        `<b>Total / សរុប: $${total.toFixed(2)}</b>` +
         (links ? `\n\n${links}` : ''),
       photos
     )

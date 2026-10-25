@@ -282,6 +282,8 @@ input, select, textarea { font-size: 16px; }
    CARDS
    ═══════════════════════════════════════════════════════════ */
 .card {
+  position: relative;
+  z-index: 20;
   background: var(--bg-card);
   border: 1px solid var(--bg-border);
   border-radius: 1rem;
@@ -463,6 +465,7 @@ input, select, textarea { font-size: 16px; }
 .hero-bg {
   position: absolute;
   inset: 0;
+  z-index: 0;
   background-color: #0c0a08;
   background-image:
     radial-gradient(circle at 82% 38%, rgba(240, 167, 66, 0.32) 0%, rgba(200, 120, 24, 0.14) 40%, transparent 68%),
@@ -696,6 +699,7 @@ input, select, textarea { font-size: 16px; }
 
 .how-step {
   position: relative;
+  z-index: 20;
   padding: 1.35rem 1.2rem 1.4rem;
   border-radius: 1.15rem;
   background: var(--bg-card);
@@ -759,6 +763,8 @@ input, select, textarea { font-size: 16px; }
 }
 
 .join-card {
+  position: relative;
+  z-index: 20;
   max-width: 640px;
   margin: 0 auto;
   padding: 2.4rem 1.5rem;
@@ -843,6 +849,7 @@ input, select, textarea { font-size: 16px; }
    ═══════════════════════════════════════════════════════════ */
 .site-footer {
   position: relative;
+  z-index: 20;
   margin-top: auto;
   background: var(--bg-surface);
   border-top: 1px solid var(--bg-border);

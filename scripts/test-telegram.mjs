@@ -65,28 +65,33 @@ test('missing Telegram configuration makes no requests', async () => {
 
 async function submitWithMenu(menuResult) {
   const alerts = []
+  const inserts = []
   const api = load('../app/(site)/order/actions.ts', {}, {
     '@/lib/supabase/server': { createClient: async () => ({ from: table => table === 'orders'
-      ? { insert: () => ({ select: () => ({ single: async () => ({ data: { id: 'order-123456' }, error: null }) }) }) }
-      : { select: () => ({ in: async () => menuResult }) } }) },
+      ? { insert: value => { inserts.push(value); return { select: () => ({ single: async () => ({ data: { id: 'order-123456' }, error: null }) }) } } }
+      : table === 'tables'
+        ? { select: () => { const query = { eq: () => query, single: async () => ({ data: { number: 'T1' }, error: null }) }; return query } }
+        : { select: () => { const query = { in: () => query, eq: async () => menuResult }; return query } } }) },
     '@/lib/telegram': { sendTelegram: async (...args) => alerts.push(args) },
   })
-  const result = await api.submitOrder({ tableId: 'T1', total: 8, items: [{ id: 'coffee', name_en: 'Coffee <milk>', name_km: 'កាហ្វេ', quantity: 2, notes: 'Less sugar', image_url: 'https://untrusted.example.com/client.jpg' }] })
-  return { result, alerts }
+  const result = await api.submitOrder({ tableId: 'T1', token: 'valid-token', items: [{ id: 'coffee', price: 0.01, name_en: 'Fake', quantity: 2, notes: 'Less sugar', image_url: 'https://untrusted.example.com/client.jpg' }] })
+  return { result, alerts, inserts }
 }
 
 test('order photos use database URLs and captions identify order, quantity and notes', async () => {
-  const { result, alerts } = await submitWithMenu({ data: [{ id: 'coffee', image_url: 'https://images.example.com/saved.jpg' }], error: null })
+  const { result, alerts, inserts } = await submitWithMenu({ data: [{ id: 'coffee', name_en: 'Coffee <milk>', name_km: 'Coffee', price: 4, image_url: 'https://images.example.com/saved.jpg' }], error: null })
   assert.equal(result.success, true)
+  assert.equal(inserts[0].total, 8)
+  assert.equal(inserts[0].items[0].price, 4)
   assert.equal(alerts[0][1][0].url, 'https://images.example.com/saved.jpg')
   assert.match(alerts[0][1][0].caption, /2 × Coffee/)
   assert.match(alerts[0][1][0].caption, /Less sugar/)
   assert.match(alerts[0][0], /Coffee &lt;milk&gt;/)
 })
 
-test('image lookup failure still sends text and returns the saved order', async () => {
-  const { result, alerts } = await submitWithMenu({ data: null, error: { message: 'unavailable' } })
-  assert.equal(result.success, true)
-  assert.equal(alerts.length, 1)
-  assert.equal(alerts[0][1].length, 0)
+test('menu lookup failure rejects the order before insert and alert', async () => {
+  const { result, alerts, inserts } = await submitWithMenu({ data: null, error: { message: 'unavailable' } })
+  assert.equal(result.success, false)
+  assert.equal(inserts.length, 0)
+  assert.equal(alerts.length, 0)
 })

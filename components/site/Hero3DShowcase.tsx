@@ -64,9 +64,8 @@ export function Hero3DShowcase() {
       {/* ── Floating 3D Main Stage ── */}
       <div
         ref={cardRef}
-        className={`relative w-full aspect-square transition-transform duration-300 ease-out flex items-center justify-center ${
-          !isHovered ? 'animate-hero-float' : ''
-        }`}
+        className={`relative w-full aspect-square transition-transform duration-300 ease-out flex items-center justify-center ${!isHovered ? 'animate-hero-float' : ''
+          }`}
         style={{
           transformStyle: 'preserve-3d',
           transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,

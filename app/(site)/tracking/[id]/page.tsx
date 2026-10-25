@@ -53,7 +53,7 @@ export default function TrackingPage() {
   async function callWaiter() {
     if (!order || waiterCalled || callingWaiter) return
     setCallingWaiter(true)
-    try { await sendWaiterAlert(order.id, order.table_id); setWaiterCalled(true) }
+    try { await sendWaiterAlert(order.id); setWaiterCalled(true) }
     catch (e) { console.error(e) }
     finally { setCallingWaiter(false) }
   }
