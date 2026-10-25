@@ -3,17 +3,19 @@
 import { MenuImage } from '@/components/site/MenuImage'
 
 import Link from 'next/link'
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useState, type ReactNode } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useTheme } from '@/lib/theme-context'
 import { t } from '@/lib/i18n'
 import { tableQs } from '@/lib/table-qs'
+import { getLocation } from '@/lib/location'
+import { getGuestWifi } from '@/app/table-access-actions'
 import { createClient } from '@/lib/supabase/client'
 import type { MenuItem } from '@/lib/types'
-import { ArrowRight, Compass, Sparkles } from 'lucide-react'
+import { ArrowRight, Coffee, Compass, KeyRound, MapPin, Plus, Sparkles, Wifi } from 'lucide-react'
 import { Hero3DShowcase } from '@/components/site/Hero3DShowcase'
 import { CoffeeBeanRain } from '@/components/site/CoffeeBeanRain'
-import { IconBean, IconCup, IconLeaf, IconPlus, IconStar } from '@/components/site/icons'
+import { IconBean, IconStar } from '@/components/site/icons'
 
 function LandingContent() {
   const { lang, theme } = useTheme()
@@ -22,9 +24,27 @@ function LandingContent() {
   const table = searchParams.get('table')
   const token = searchParams.get('token')
   const qs = tableQs(table, token)
+  const hasTableQr = Boolean(table?.trim() && token?.trim())
   const [featured, setFeatured] = useState<MenuItem[]>([])
   const [menuError, setMenuError] = useState(false)
   const [menuLoading, setMenuLoading] = useState(true)
+  const [wifiState, setWifiState] = useState<{ key: string; success: boolean; ssid: string; password: string } | null>(null)
+
+  useEffect(() => {
+    if (!table?.trim() || !token?.trim()) return
+    const key = `${table}\u0000${token}`
+    let active = true
+    async function loadWifi() {
+      try {
+        const result = await getGuestWifi(table!, token!, await getLocation())
+        if (active) setWifiState({ key, ...result })
+      } catch {
+        if (active) setWifiState({ key, success: false, ssid: '', password: '' })
+      }
+    }
+    void loadWifi()
+    return () => { active = false }
+  }, [table, token])
 
   useEffect(() => {
     const supabase = createClient()
@@ -51,12 +71,12 @@ function LandingContent() {
     return () => { active = false; window.removeEventListener('focus', loadFeatured) }
   }, [])
 
-  const features = [
+  const features: { icon: ReactNode; title: string; desc: string; href?: string }[] = [
     { icon: <IconBean />, title: t('feat1Title', lang), desc: t('feat1Desc', lang) },
-    { icon: <IconLeaf />, title: t('feat2Title', lang), desc: t('feat2Desc', lang) },
-    { icon: <IconCup />, title: t('feat3Title', lang), desc: t('feat3Desc', lang) },
+    { icon: <MapPin className="w-8 h-8" strokeWidth={1.7} aria-hidden="true" />, title: t('feat2Title', lang), desc: t('feat2Desc', lang), href: `/map${qs}` },
     { icon: <IconStar />, title: t('feat4Title', lang), desc: t('feat4Desc', lang) },
   ]
+  const wifi = wifiState?.key === `${table}\u0000${token}` ? wifiState : null
 
   const how = [
     { n: '01', title: t('how1Title', lang), desc: t('how1Desc', lang) },
@@ -82,7 +102,7 @@ function LandingContent() {
           className="absolute -top-16 -right-16 w-[360px] sm:w-[480px] h-[360px] sm:h-[480px] rounded-full pointer-events-none filter blur-[95px] opacity-60 animate-aurora-1"
           style={{
             background: isLight
-              ? 'radial-gradient(circle, rgba(240, 167, 66, 0.3) 0%, rgba(217, 119, 6, 0.1) 50%, transparent 75%)'
+              ? 'radial-gradient(circle, rgba(240, 167, 66, 0.13) 0%, rgba(217, 119, 6, 0.04) 50%, transparent 75%)'
               : 'radial-gradient(circle, rgba(240, 167, 66, 0.45) 0%, rgba(217, 119, 6, 0.15) 50%, transparent 75%)',
           }}
           aria-hidden="true"
@@ -91,7 +111,7 @@ function LandingContent() {
           className="absolute top-1/4 -left-20 w-[320px] sm:w-[420px] h-[320px] sm:h-[420px] rounded-full pointer-events-none filter blur-[90px] opacity-45 animate-aurora-2"
           style={{
             background: isLight
-              ? 'radial-gradient(circle, rgba(48, 201, 160, 0.28) 0%, rgba(16, 185, 129, 0.08) 50%, transparent 75%)'
+              ? 'radial-gradient(circle, rgba(48, 201, 160, 0.11) 0%, rgba(16, 185, 129, 0.03) 50%, transparent 75%)'
               : 'radial-gradient(circle, rgba(48, 201, 160, 0.4) 0%, rgba(16, 185, 129, 0.1) 50%, transparent 75%)',
           }}
           aria-hidden="true"
@@ -244,9 +264,9 @@ function LandingContent() {
           {menuError && <p role="alert">{lang === 'km' ? 'មិនអាចទាញយកមុខម្ហូបបានទេ។ សូមព្យាយាមម្តងទៀត។' : 'Could not load the menu. Please refresh to try again.'}</p>}
           {menuLoading && <p role="status">{lang === 'km' ? 'កំពុងទាញយកមុខម្ហូប…' : 'Loading menu…'}</p>}
           {!menuLoading && !menuError && !featured.length && <p>{lang === 'km' ? 'មិនទាន់មានមុខម្ហូបទេ។' : 'No menu items available yet.'}</p>}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {features.map((f, i) => (
-              <div key={i} className="card card-hover p-5 flex flex-col items-center text-center gap-3 relative z-20">
+          <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${hasTableQr ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
+            {features.map((f, i) => {
+              const content = <>
                 <div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center"
                   style={{ background: 'var(--primary-glow)', color: 'var(--primary)', border: '1px solid rgba(240,167,66,0.22)' }}
@@ -257,8 +277,28 @@ function LandingContent() {
                   <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{f.title}</p>
                   <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--text-dim)' }}>{f.desc}</p>
                 </div>
+              </>
+              const cardClass = 'card card-hover p-5 flex flex-col items-center text-center gap-3 relative z-20'
+              return f.href
+                ? <Link key={i} href={f.href} className={`${cardClass} focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600`} aria-label={f.title}>{content}</Link>
+                : <div key={i} className={cardClass}>{content}</div>
+            })}
+            {hasTableQr && (
+              <div className="card p-5 flex flex-col items-center text-center gap-3 relative z-20">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'var(--primary-glow)', color: 'var(--primary)', border: '1px solid rgba(240,167,66,0.22)' }}>
+                  <Wifi className="w-8 h-8" strokeWidth={1.7} aria-hidden="true" />
+                </div>
+                <div className="w-full min-w-0">
+                  <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{t('wifiTitle', lang)}</p>
+                  {wifi?.success ? (
+                    <div className="mt-2 space-y-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                      <p><span className="font-semibold">{t('wifiName', lang)}:</span> <span className="break-all select-text">{wifi.ssid}</span></p>
+                      <p className="flex items-center justify-center gap-1 flex-wrap"><KeyRound className="w-3.5 h-3.5" aria-hidden="true" /><span className="font-semibold">{t('wifiPassword', lang)}:</span> <span className="break-all select-text">{wifi.password}</span></p>
+                    </div>
+                  ) : <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--text-dim)' }}>{wifi ? t('wifiUnavailable', lang) : t('wifiLoading', lang)}</p>}
+                </div>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -310,7 +350,7 @@ function LandingContent() {
                 <div className="w-full h-44 flex items-center justify-center relative overflow-hidden dish-ph">
                   <MenuImage src={item.image_url} alt={item.name_en} className="w-full h-full object-cover" loading="lazy">
                     <div className="flex flex-col items-center gap-2" style={{ color: 'var(--primary)', opacity: 0.55 }}>
-                      <IconCup />
+                      <Coffee className="w-6 h-6" aria-hidden="true" />
                       <span className="text-[10px] tracking-widest uppercase">{item.category}</span>
                     </div>
                   </MenuImage>
@@ -338,7 +378,7 @@ function LandingContent() {
                       style={{ background: 'var(--primary)', color: 'var(--text-invert)', boxShadow: 'var(--shadow-primary)', minHeight: 'unset' }}
                       aria-label={`Order ${item.name_en}`}
                     >
-                      <IconPlus />
+                      <Plus className="w-4 h-4" aria-hidden="true" />
                     </Link>
                   </div>
                 </div>

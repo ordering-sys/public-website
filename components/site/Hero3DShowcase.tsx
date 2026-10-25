@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
 import { Sparkles, Star, Coffee } from 'lucide-react'
 import { useTheme } from '@/lib/theme-context'
@@ -14,10 +14,19 @@ export function Hero3DShowcase() {
   const [rotateX, setRotateX] = useState(0)
   const [rotateY, setRotateY] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
+  const [drink, setDrink] = useState<'hot' | 'iced'>('hot')
+
+  useEffect(() => {
+    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const interval = window.setInterval(() => {
+      if (!document.hidden && !motionPreference.matches) setDrink(current => current === 'hot' ? 'iced' : 'hot')
+    }, 6500)
+    return () => window.clearInterval(interval)
+  }, [])
 
   // Handle smooth 3D tilt on mouse movement
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return
+  const handleMouseMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!cardRef.current || e.pointerType === 'touch' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const rect = cardRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
@@ -44,7 +53,7 @@ export function Hero3DShowcase() {
     <div
       className="relative w-full max-w-[480px] mx-auto select-none py-4"
       style={{ perspective: '1200px' }}
-      onMouseMove={handleMouseMove}
+      onPointerMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -84,22 +93,39 @@ export function Hero3DShowcase() {
         />
 
         {/* ── Transparent Cup Render (No background box!) ── */}
-        <div className="relative w-full h-full flex items-center justify-center">
+        <div className="relative w-full h-full flex items-center justify-center" role="img" aria-label={drink === 'hot' ? 'Hot latte in a ceramic cup' : 'Iced latte in a glass'}>
           <Image
             src="/images/hero-cup-transparent.png"
-            alt="Artisanal 3D Coffee Cup at The Bean Haven"
+            alt=""
+            aria-hidden="true"
             width={480}
             height={480}
+            sizes="(max-width: 640px) 90vw, 480px"
             priority
-            className="w-full h-full object-contain filter drop-shadow-2xl transition-transform duration-500"
+            className={`hero-drink-image absolute inset-0 w-full h-full object-contain filter drop-shadow-2xl ${drink === 'hot' ? 'is-visible' : ''}`}
             style={{
               transform: isHovered ? 'scale(1.05)' : 'scale(1.0)',
             }}
           />
 
+          <Image
+            src="/images/hero-iced-coffee.png"
+            alt=""
+            aria-hidden="true"
+            width={480}
+            height={480}
+            sizes="(max-width: 640px) 90vw, 480px"
+            loading="eager"
+            className={`hero-drink-image absolute inset-0 w-full h-full object-contain filter drop-shadow-2xl ${drink === 'iced' ? 'is-visible' : ''}`}
+            style={{ transform: isHovered ? 'scale(1.05)' : 'scale(1.0)' }}
+          />
+
+          <div className={`hero-liquid hero-liquid-hot ${drink === 'hot' ? 'is-visible' : ''}`} aria-hidden="true" />
+          <div className={`hero-liquid hero-liquid-iced ${drink === 'iced' ? 'is-visible' : ''}`} aria-hidden="true" />
+
           {/* ── Soft Ethereal Hot Coffee Steam (Originating strictly in the middle of the coffee cup) ── */}
           <div
-            className="absolute left-[51%] -translate-x-1/2 bottom-[64%] w-40 h-52 pointer-events-none flex items-end justify-center z-10 overflow-visible"
+            className={`hero-hot-steam absolute left-[51%] -translate-x-1/2 bottom-[64%] w-40 h-52 pointer-events-none flex items-end justify-center z-10 overflow-visible ${drink === 'hot' ? 'is-visible' : ''}`}
             aria-hidden="true"
           >
             {/* Soft Warm Heat Haze at the liquid surface */}
@@ -245,6 +271,14 @@ export function Hero3DShowcase() {
             {lang === 'km' ? 'រសជាតិផ្អែមក្រអូប' : 'Silky Crema'}
           </span>
         </div>
+      </div>
+      <div className="relative z-20 flex justify-center gap-2 mt-3" role="group" aria-label="Choose coffee image">
+        <button type="button" onClick={() => setDrink('hot')} aria-pressed={drink === 'hot'} className={`hero-drink-button ${drink === 'hot' ? 'is-active' : ''}`}>
+          {lang === 'km' ? 'កាហ្វេក្តៅ' : 'Hot coffee'}
+        </button>
+        <button type="button" onClick={() => setDrink('iced')} aria-pressed={drink === 'iced'} className={`hero-drink-button ${drink === 'iced' ? 'is-active' : ''}`}>
+          {lang === 'km' ? 'កាហ្វេទឹកកក' : 'Iced coffee'}
+        </button>
       </div>
     </div>
   )

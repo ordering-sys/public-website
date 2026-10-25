@@ -28,9 +28,8 @@ function HeaderInner() {
   const links = [
     { href: `/${qs}`, key: 'navHome' as const, active: pathname === '/' },
     { href: `/order${qs}`, key: 'navMenu' as const, active: pathname.startsWith('/order') },
-    { href: `/map${qs}`, key: 'navMap' as const, active: pathname.startsWith('/map') },
-    { href: `/${qs}#about`, key: 'navAbout' as const, active: false },
-    { href: `/${qs}#contact`, key: 'navContact' as const, active: false },
+    { href: `/about${qs}`, key: 'navAbout' as const, active: pathname === '/about' },
+    { href: `/contact${qs}`, key: 'navContact' as const, active: pathname === '/contact' },
   ]
 
   return (

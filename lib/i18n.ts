@@ -32,10 +32,13 @@ const strings = {
   /* ── Features row ── */
   feat1Title:     { en: 'Premium Quality',     km: 'គុណភាពខ្ពស់' },
   feat1Desc:      { en: 'Finest beans, expertly brewed', km: 'គ្រាប់កាហ្វេប្រណីត ឆ្ងាញ់ល្អ' },
-  feat2Title:     { en: 'Fresh Ingredients',   km: 'គ្រឿងផ្សំស្រស់' },
-  feat2Desc:      { en: 'Tasty, healthy, always fresh',  km: 'ឆ្ងាញ់ សុខភាព ស្រស់ស្ទើរ' },
-  feat3Title:     { en: 'Cozy Atmosphere',     km: 'បរិយាកាសសង្ហា' },
-  feat3Desc:      { en: 'A perfect place to relax',      km: 'កន្លែងល្អសម្រាប់ការសម្រាក' },
+  feat2Title:     { en: 'Cafe Location',       km: 'ទីតាំងហាងកាហ្វេ' },
+  feat2Desc:      { en: 'Tap for directions to our cafe', km: 'ចុចដើម្បីមើលទីតាំង និងទិសដៅមកហាង' },
+  wifiTitle:      { en: 'Guest Wi-Fi',         km: 'Wi-Fi សម្រាប់ភ្ញៀវ' },
+  wifiName:       { en: 'Network',             km: 'ឈ្មោះ Wi-Fi' },
+  wifiPassword:   { en: 'Password',            km: 'ពាក្យសម្ងាត់' },
+  wifiLoading:    { en: 'Checking table access…', km: 'កំពុងពិនិត្យសិទ្ធិតុ…' },
+  wifiUnavailable:{ en: 'Ask staff for Wi-Fi details', km: 'សូមសួរបុគ្គលិកអំពី Wi-Fi' },
   feat4Title:     { en: 'Fast & Friendly Service', km: 'សេវាកម្មរហ័ស' },
   feat4Desc:      { en: 'Because you matter',   km: 'ព្រោះអ្នកសំខាន់' },
 

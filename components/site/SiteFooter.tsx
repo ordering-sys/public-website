@@ -91,8 +91,8 @@ export function SiteFooter() {
   const explore = [
     { href: homeHref, label: t('navHome', lang) },
     { href: orderHref, label: t('navMenu', lang) },
-    { href: `${homeHref}#about`, label: t('navAbout', lang) },
-    { href: `${homeHref}#contact`, label: t('navContact', lang) },
+    { href: `/about${qs}`, label: t('navAbout', lang) },
+    { href: `/contact${qs}`, label: t('navContact', lang) },
   ]
 
   const social = [
@@ -157,7 +157,7 @@ export function SiteFooter() {
           </div>
 
           {/* Visit */}
-          <div id="contact">
+          <div>
             <p className="label-overline mb-4">{t('footerVisit', lang)}</p>
             <ul className="flex flex-col gap-3.5" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
               <li className="footer-meta">
