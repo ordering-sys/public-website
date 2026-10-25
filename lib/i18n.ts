@@ -92,6 +92,7 @@ const strings = {
   items:          { en: 'items',                km: 'មុខ' },
   item:           { en: 'item',                 km: 'មុខ' },
   startOrder:     { en: 'Start Order',          km: 'ចាប់ផ្តើមកុម្ម៉ង់' },
+  mustScanInShop: { en: 'Must Scan in Shop — scan the QR code at your table to order.', km: 'សូមស្កេន QR កូដនៅតុក្នុងហាង ដើម្បីកុម្ម៉ង់។' },
   scanPrompt:     { en: 'Scan the QR code at your table to begin ordering', km: 'ស្កេន QR Code នៅតុដើម្បីចាប់ផ្តើមកុម្ម៉ង់' },
   welcomeLabel:   { en: 'Welcome',              km: 'សូមស្វាគមន៍' },
   landingDesc:    { en: 'Order food & drinks directly from your table — fast, easy, no waiting.', km: 'កុម្ម៉ង់អាហារ និងភេសជ្ជៈដោយផ្ទាល់ — លឿន ងាយ គ្មានរង់ចាំ។' },

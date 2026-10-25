@@ -1,6 +1,8 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { checkTableAccess } from '@/lib/table-access'
+import type { LocationFix } from '@/lib/location'
 import { sendTelegram, type TelegramOrderPhoto } from '@/lib/telegram'
 import type { CartItem } from '@/lib/types'
 
@@ -19,12 +21,15 @@ function escapeTelegramHtml(value: string): string {
 
 export async function submitOrder(data: {
   tableId: string
+  token: string
+  location: LocationFix
   items: CartItem[]
   total: number
 }) {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   try {
+    await checkTableAccess(data.tableId, data.token, data.location)
     /* ── Insert order ── */
     const { data: order, error } = await supabase
       .from('orders')
@@ -98,6 +103,6 @@ export async function submitOrder(data: {
     return { success: true, orderId: order.id }
   } catch (error) {
     console.error('Order submission failed:', error)
-    return { success: false, error: 'Failed to submit order' }
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to submit order' }
   }
 }
