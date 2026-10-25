@@ -67,14 +67,13 @@ async function submitWithMenu(menuResult) {
   const alerts = []
   const inserts = []
   const api = load('../app/(site)/order/actions.ts', {}, {
-    '@/lib/supabase/server': { createClient: async () => ({ from: table => table === 'orders'
+    '@/lib/table-access': { checkTableAccess: async () => ({ number: 'T1' }) },
+    '@/lib/supabase/admin': { createAdminClient: () => ({ from: table => table === 'orders'
       ? { insert: value => { inserts.push(value); return { select: () => ({ single: async () => ({ data: { id: 'order-123456' }, error: null }) }) } } }
-      : table === 'tables'
-        ? { select: () => { const query = { eq: () => query, single: async () => ({ data: { number: 'T1' }, error: null }) }; return query } }
-        : { select: () => { const query = { in: () => query, eq: async () => menuResult }; return query } } }) },
+      : { select: () => { const query = { in: () => query, eq: async () => menuResult }; return query } } }) },
     '@/lib/telegram': { sendTelegram: async (...args) => alerts.push(args) },
   })
-  const result = await api.submitOrder({ tableId: 'T1', token: 'valid-token', items: [{ id: 'coffee', price: 0.01, name_en: 'Fake', quantity: 2, notes: 'Less sugar', image_url: 'https://untrusted.example.com/client.jpg' }] })
+  const result = await api.submitOrder({ tableId: 'T1', token: 'valid-token', location: { latitude: 11.5564, longitude: 104.9282, accuracy: 20 }, items: [{ id: 'coffee', price: 0.01, name_en: 'Fake', quantity: 2, notes: 'Less sugar', image_url: 'https://untrusted.example.com/client.jpg' }] })
   return { result, alerts, inserts }
 }
 

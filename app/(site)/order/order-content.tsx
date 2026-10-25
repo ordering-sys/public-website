@@ -1,5 +1,6 @@
 'use client'
 
+import { getLocation } from '@/lib/location'
 import { MenuImage } from '@/components/site/MenuImage'
 
 import { useEffect, useRef, useState } from 'react'
@@ -18,11 +19,12 @@ interface DetailModalProps {
   item: MenuItem
   lang: 'en' | 'km'
   cartQty: number
+  canOrder: boolean
   onClose: () => void
   onAdd: (item: MenuItem, qty: number, notes: string) => void
 }
 
-function ProductDetailModal({ item, lang, cartQty, onClose, onAdd }: DetailModalProps) {
+function ProductDetailModal({ item, lang, cartQty, canOrder, onClose, onAdd }: DetailModalProps) {
   const [qty, setQty]       = useState(1)
   const [notes, setNotes]   = useState('')
   const [added, setAdded]   = useState(false)
@@ -36,6 +38,7 @@ function ProductDetailModal({ item, lang, cartQty, onClose, onAdd }: DetailModal
   }, [])
 
   function handleAdd() {
+    if (!canOrder || !item.available) return
     onAdd(item, qty, notes)
     setAdded(true)
     setTimeout(() => setAdded(false), 1800)
@@ -238,11 +241,11 @@ function ProductDetailModal({ item, lang, cartQty, onClose, onAdd }: DetailModal
         >
           <button
             onClick={handleAdd}
-            disabled={!item.available}
+            disabled={!canOrder || !item.available}
             className="btn-fresh w-full py-4 text-base justify-center"
             aria-live="polite"
           >
-            {added ? (
+            {!canOrder ? t('mustScanInShop', lang) : added ? (
               <>✓ {t('detailAddMore', lang)}</>
             ) : (
               <>{t('detailAddToOrder', lang)} — ${subtotal}</>
@@ -262,6 +265,7 @@ export default function OrderContent() {
   const searchParams = useSearchParams()
   const table        = searchParams.get('table')
   const token        = searchParams.get('token')
+  const canOrder     = Boolean(table?.trim() && token?.trim())
   const { lang }     = useTheme()
 
   const [menuItems,         setMenuItems]         = useState<MenuItem[]>([])
@@ -302,6 +306,7 @@ export default function OrderContent() {
 
   /* ── Cart helpers ── */
   const addToCartWithNotes = (item: MenuItem, qty: number, notes: string) => {
+    if (!canOrder) return
     setCart(prev => {
       const existing = prev.find(i => i.id === item.id)
       if (existing) {
@@ -329,15 +334,15 @@ export default function OrderContent() {
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0)
 
   async function handleSubmit() {
-    if (!table || !token || cart.length === 0) return
+    if (!canOrder || !table || !token || cart.length === 0) return
     setSubmitting(true)
     try {
-      const result = await submitOrderAction({ tableId: table, token, items: cart })
+      const result = await submitOrderAction({ tableId: table, token, location: await getLocation(), items: cart })
       if (!result.success || !result.orderId) throw new Error(result.error ?? 'Failed')
       router.push(`/tracking/${result.orderId}`)
     } catch (err) {
       console.error('Order failed:', err)
-      alert(t('orderError', lang))
+      alert(err instanceof Error ? err.message : t('orderError', lang))
     } finally {
       setSubmitting(false)
     }
@@ -365,6 +370,13 @@ export default function OrderContent() {
 
   return (
     <div className="pb-32">
+      {!canOrder && (
+        <div role="status" className="mx-auto max-w-6xl px-6 pt-6">
+          <p className="rounded-xl border px-4 py-3 text-center font-semibold" style={{ background: 'var(--primary-glow)', color: 'var(--primary)', borderColor: 'var(--bg-border)' }}>
+            {t('mustScanInShop', lang)}
+          </p>
+        </div>
+      )}
 
       {/* ── Page hero banner ── */}
       <div className="page-banner">
@@ -512,7 +524,11 @@ export default function OrderContent() {
                     ${item.price.toFixed(2)}
                   </span>
 
-                  {inQty > 0 ? (
+                  {!canOrder ? (
+                    <span className="text-xs font-semibold text-right max-w-[65%]" style={{ color: 'var(--text-secondary)' }}>
+                      {t('mustScanInShop', lang)}
+                    </span>
+                  ) : inQty > 0 ? (
                     /* Inline stepper when already in cart */
                     <div className="qty-stepper" role="group" aria-label={`Quantity of ${item.name_en}`}>
                       <button
@@ -558,6 +574,7 @@ export default function OrderContent() {
       {detailItem && (
         <ProductDetailModal
           item={detailItem}
+          canOrder={canOrder}
           lang={lang}
           cartQty={cart.find(c => c.id === detailItem.id)?.quantity ?? 0}
           onClose={() => setDetailItem(null)}
@@ -571,7 +588,7 @@ export default function OrderContent() {
       {/* ══════════════════════════════════════════════
           FLOATING CART PILL
           ══════════════════════════════════════════════ */}
-      {cartCount > 0 && (
+      {canOrder && cartCount > 0 && (
         <button
           onClick={() => setShowCart(true)}
           className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] md:bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all duration-200"
@@ -602,7 +619,7 @@ export default function OrderContent() {
       {/* ══════════════════════════════════════════════
           CART DRAWER
           ══════════════════════════════════════════════ */}
-      {showCart && (
+      {canOrder && showCart && (
         <div
           className="fixed inset-0 z-50 flex flex-col justify-end"
           role="dialog"
@@ -737,7 +754,7 @@ export default function OrderContent() {
               </div>
               <button
                 onClick={handleSubmit}
-                disabled={submitting}
+                disabled={!canOrder || submitting}
                 className="btn-primary w-full py-4 text-base justify-center"
                 aria-busy={submitting}
               >

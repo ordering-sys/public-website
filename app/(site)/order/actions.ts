@@ -1,6 +1,8 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { checkTableAccess } from '@/lib/table-access'
+import type { LocationFix } from '@/lib/location'
 import { sendTelegram, type TelegramOrderPhoto } from '@/lib/telegram'
 import type { CartItem } from '@/lib/types'
 
@@ -20,6 +22,7 @@ function escapeTelegramHtml(value: string): string {
 export async function submitOrder(data: {
   tableId: string
   token: string
+  location: LocationFix
   items: CartItem[]
 }) {
   try {
@@ -36,10 +39,14 @@ export async function submitOrder(data: {
         requested.reduce((sum, item) => sum + item.quantity, 0) > 100) {
       return { success: false, error: 'Invalid order items' }
     }
-    const supabase = await createClient()
-    const { data: table, error: tableError } = await supabase.from('tables')
-      .select('number').eq('number', data.tableId).eq('token', data.token).eq('active', true).single()
-    if (tableError || !table) return { success: false, error: 'Invalid table QR code' }
+
+    let table: Awaited<ReturnType<typeof checkTableAccess>>
+    try {
+      table = await checkTableAccess(data.tableId, data.token, data.location)
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Table access denied' }
+    }
+    const supabase = createAdminClient()
     const { data: menu, error: menuError } = await supabase.from('menu_items')
       .select('id, name_km, name_en, description, price, category, image_url, available')
       .in('id', requested.map(item => item.id)).eq('available', true)
